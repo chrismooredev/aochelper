@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Note: untested
+
+dnum="$(printf "%02d" "$1")"; shift;
+cargo test --bin "day$dnum" "$@"
