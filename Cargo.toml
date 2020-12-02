@@ -1,12 +1,23 @@
 [package]
 name = "aochelper"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Chris Moore"]
 edition = "2018"
+description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
+homepage = "https://github.com/csm123199/aochelper"
+repository = "https://github.com/csm123199/aochelper"
+readme = "README.md"
+license = "SimPL-2.0"
+keywords = ["aoc", "advent-of-code", "programming-puzzles"]
+categories = ["development-tools", "development-tools::cargo-plugins"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# cargo-aoc
+clap = "3.0.0-beta.2"
+cargo-edit = "0.7.0"
+
+# helper stuff
 colored = "1.9.0"
 ptree = "0.2.1"
 atty = "0.2.13"

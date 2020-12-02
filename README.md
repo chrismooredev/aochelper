@@ -1,23 +1,43 @@
 
-# Advent of Code Helper Library
+# Advent of Code Helper Library & Cargo Subcommand
 This library is meant to assist in the structuring, running, and creation of tests for Advent of Code challenges.
 
 ## Usage
-Create a new crate, and add this one as a dependency. I recommend copying the `./day_template.rs`, `./create-template.sh`, `./test` (for bash) and `./test.ps1` (for powershell) files.
+Install the command/library globally:
+```
+cargo install aochelper
+```
+Then in a folder containing your AoC days, you can run the following to init the project:
+```
+cargo-aoc new <day_num> <day_name>
+```
+(Alternatively run `cargo-aoc init <day_name>` in an already existing folder)
 
-I recommend each day as a seperate binary (ex: each day in `./src/bin/dayXX.rs`) with their own tests.
+## Why this one?
+(over the many other AoC crates)
+* Simple day creation
+* Mutable day struct
+  * Easy caching between parts 1 and 2 when run as a binary
+* Provides a basic N-Tree implementation with [`ptree`](https://crates.io/crates/ptree)
+* Runs the program as proper tests
+  * Run the program with `cargo run --release` for a fast run, once the algorithm is stabilized.
+* Inclusion of typical helper libraries (data structures, itertools, etc)
 
-## Utility Files
-If you run `./create-template.sh <day_number> <day_name>` it will automatically copy the template to `./src/bin/dayXX.rs` and fill the day number and name into the file so you can get going!
+This crate allows you to easily implement your solutions with the right amount of skeleton code to focus on just your projec
 
-If you are going to use the template file, it is highly recommended to put each day's input data in `./input/XX.txt`. This will be fed to each day so you can parse it as a `&str`.
+## Day Input
+In the same folder, save your personal puzzle input to `input/00.txt`, replacing `00` with your 2-digit day number. This will be passed to your puzzle as a `&str` for further parsing.
 
-The day template file has some tests in it already, so you should just have to adapt them for each day. Once you finish a part of a day, you can replace the `0` in the test so it passes. Most days provide shorter inputs and expected answers to add to this section as well.
+## Running your Day Inputs
+Day problems are implemented as tests, so you can run the regular test command to check your programs. (`cargo test`) Tests are auto-populated with your puzzle input, checking it as equal to zero - this can be changed once the correct answer is found.
 
-## Day Binaries
-If you use the day template, then you will get a `fn main() { ... }` for each day. If this is ran from a TTY, it will automatically use the `input/XX.txt` file built into the binary at compilation, otherwise it will obtain the day input via stdin.
+Running the crate as a binary runs the program against the large puzzle input - this allows easy usage of release compilation, after the algorithm is solidified.
 
-You can test each one seperately using `cargo test --bin dayXX`, or just `./test XX`, which is an alias for that (which also means you can use `./test XX $test_name` for individual tests, just like with Cargo)
+Input `&str`'s can be compared to any data that implements `Eq` - meaning puzzle output can be `String`s or even a custom data type.
 
-## Testing
-The day template shows how I've been testing my programs. I've tried to work the test functions to allow a good number of type inputs/outputs as Rust's type system allows. If you have any improvements, I welcome you to submit PRs for review.
+## Contributing
+
+Any improvements are welcome as GitHub Pull Requests.
+## Current Todos
+* Get command to run properly as "`cargo aoc ...`" (Currently [`clap`](https://crates.io/crates/clap) isn't configured for this)
+* Cleanup test runner code?
