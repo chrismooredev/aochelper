@@ -81,7 +81,11 @@ fn main() -> io::Result<()> {
 		SubCmd::New(CmdNew { day_num, day_name }) => {
 			// make the folder - cd into it
 			let folder_name = format!("day{:0>2}", day_num);
-			std::fs::create_dir(&folder_name)?;
+			if let Err(e) = std::fs::create_dir(&folder_name) {
+				eprintln!("Unable to create folder `{}`. Exiting.", folder_name);
+				eprintln!("{}", e.to_string());
+				return Ok(());
+			}
 			std::env::set_current_dir(&folder_name)?;
 
 			(day_num, day_name)
@@ -117,7 +121,7 @@ fn main() -> io::Result<()> {
 
 		manifest.add_deps(&["dependencies".into()], &vec).unwrap();
 
-		manifest.write_to_file(&mut std::fs::File::create("Cargo.toml")?).expect("Error writing Cargo.toml");
+		manifest.write_to_file(&mut std::fs::File::create("Cargo.toml").expect("Unable to open Cargo.toml")).expect("Error writing Cargo.toml");
 	}
 	
 	// replace stuff on our template and write it out
