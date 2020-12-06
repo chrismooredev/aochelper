@@ -61,7 +61,7 @@ pub fn test_runner<D: AoCDay, TS: ToString + fmt::Debug + PartialEq<D::Answer> +
 // Used to test a specific function in a day
 pub fn run_test<I, O, F>(func: F, cases: &[(I, O)]) where
 	I: fmt::Debug + Sized,
-	O: PartialEq<I> + Eq + fmt::Debug,
+	O: PartialEq<O> + Eq + fmt::Debug,
 	F: for<'a> Fn(&'a I) -> O {
 	for (case, expected) in cases {
 		let generated = func(case);
