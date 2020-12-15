@@ -4,13 +4,12 @@ use aochelper::daystr;
 use aochelper::{DayPart, run_test, test_runner};
 
 
-// If using borrowed input data, add a named lifetime to this and the AoCDay impl.
 struct Day{{DayNum}} {
 }
 impl Day{{DayNum}} {
 }
 
-impl AoCDay<'_> for Day{{DayNum}} {
+impl AoCDay for Day{{DayNum}} {
 	type Answer = usize;
 
 	fn day() -> u8 { {{DayNum}} }
