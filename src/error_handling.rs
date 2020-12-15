@@ -2,6 +2,7 @@
 use std::io;
 use std::fmt;
 use std::error;
+use std::num::{ParseIntError, ParseFloatError};
 
 // https://stackoverflow.com/a/31749071 - Macros within crates
 // These are inspired by various third-party crate libs
@@ -49,54 +50,57 @@ macro_rules! ensure {
 	};
 }
 
+macro_rules! impl_from_error {
+	($mem: ident, $t: ty) => {
+		impl From<$t> for DayError { fn from(e: $t) -> Self { DayError::$mem(e) } }
+	}
+}
+
+// be sure to update the error::Error impl for new variants, if applicable (wrapped data is also an error::Error)
 #[derive(Debug)]
 pub enum DayError {
+	/// A day, or part of a day, is not yet implemented.
+	Unimplemented,
 	IOError(io::Error),
+	ParseInt(ParseIntError),
+	ParseFloat(ParseFloatError),
 	Wrapped(Box<dyn error::Error>),
-	ParsingError(String),
-	Simple(String),
-	Numbered(i32),
+	Generic(String),
 }
 impl DayError {
-	pub fn new<S: Into<String>>(msg: S) -> DayError {
-		DayError::Simple(msg.into())
+	pub fn generic<S: Into<String>>(msg: S) -> DayError {
+		DayError::Generic(msg.into())
+	}
+	pub fn from_debug<E: fmt::Debug>(e: E) -> DayError {
+		DayError::Generic(format!("{:?}", e))
 	}
 }
-impl From<io::Error> for DayError {
-	fn from(e: io::Error) -> Self {
-		DayError::IOError(e)
-	}
-}
-impl From<std::num::ParseIntError> for DayError {
-	fn from(e: std::num::ParseIntError) -> Self {
-		DayError::ParsingError(format!("{}", e))
-	}
-}
-impl From<std::num::ParseFloatError> for DayError {
-	fn from(e: std::num::ParseFloatError) -> Self {
-		DayError::ParsingError(format!("{}", e))
-	}
-}
-impl From<Box<dyn error::Error>> for DayError {
-	fn from(e: Box<dyn error::Error>) -> Self {
-		DayError::Wrapped(e)
-	}
-}
-impl From<&str> for DayError {
-	fn from(e: &str) -> Self {
-		DayError::Simple(e.to_string())
-	}
-}
+
+impl_from_error!(IOError, io::Error);
+impl_from_error!(ParseInt, ParseIntError);
+impl_from_error!(ParseFloat, ParseFloatError);
+impl_from_error!(Wrapped, Box<dyn error::Error>);
+impl_from_error!(Generic, String);
+impl<'a> From<&'a str> for DayError { fn from(e: &'a str) -> Self { DayError::Generic(e.into()) } }
+
+// Forward Display impl to Debug impl
 impl fmt::Display for DayError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{:?}", self)
+		use DayError::*;
+		match self {
+			Generic(s) => fmt::Display::fmt(s, f),
+			_ => fmt::Debug::fmt(self, f),
+		}
 	}
 }
 impl error::Error for DayError {
 	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+		use DayError::*;
 		match &self {
-			DayError::IOError(e) => Some(e),
-			DayError::Wrapped(e) => Some(e.as_ref()),
+			IOError(e) => Some(e),
+			ParseInt(e) => Some(e),
+			ParseFloat(e) => Some(e),
+			Wrapped(e) => Some(e.as_ref()),
 			_ => None,
 		}
 	}

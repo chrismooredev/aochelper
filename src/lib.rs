@@ -1,9 +1,5 @@
 
-#![feature(termination_trait_lib)]
-#![feature(associated_type_defaults)]
-
-extern crate colored;
-extern crate atty;
+use std::borrow::Cow;
 
 pub mod tree_node; // independent helper data structure
 
@@ -23,15 +19,21 @@ pub mod macros {
 	}
 }
 
-pub fn run_day<D: aocday::AoCDay>(inputstr: &'static str) {
-	let dynread: Box<dyn std::io::Read> = if atty::is(atty::Stream::Stdin) {
-		Box::new(inputstr.as_bytes())
+pub fn run_day<D>(inputstr: &str) where D: AoCDay {
+	let inp: Cow<'_, str> = if atty::is(atty::Stream::Stdin) {
+		Cow::Borrowed(inputstr)
 	} else {
+		use std::io::Read;
+
 		eprintln!("Note: Using stdin for puzzle input, since it's not a TTY");
 		let stdin: std::io::Stdin = std::io::stdin();
-		Box::new(stdin)
+		let mut input = String::new();
+		stdin.lock().read_to_string(&mut input).expect("io error reading stdin");
+		
+		Cow::Owned(input)
 	};
-	let mut parsed = D::parse(dynread).unwrap();
-	println!("Part 1: {}", parsed.part1());
-	println!("Part 2: {}", parsed.part2());
+	
+		let mut parsed = D::parse(inp.as_ref()).unwrap();
+		println!("Part 1: {:?}", parsed.part1());
+		println!("Part 2: {:?}", parsed.part2());
 }

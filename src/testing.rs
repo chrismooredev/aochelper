@@ -11,14 +11,15 @@ use crate::{AoCDay, DayPart};
 
 // Used to test a day's specific part
 // Note: should refactor to use run_test ?
-pub fn test_runner<D: AoCDay, TS: ToString + fmt::Debug + PartialEq<D::Answer> + Eq>(part: DayPart, cases: &[(&'static str, TS)]) {
+pub fn test_runner<D: AoCDay, TS: ToString + fmt::Debug + PartialEq<D::Answer> + Eq>(part: DayPart, cases: &[(&str, TS)]) {
 	for (input, ans) in cases {
-		match &mut D::parse(Box::new( input.as_bytes() )) {
+		match &mut D::parse(input) {
 			Ok(day_struct) => {
 				// Catch any panics each part may throw
+				// TODO: implement chain_err or something
 				let result: D::Answer = match part {
-					DayPart::Part1 => day_struct.part1(),
-					DayPart::Part2 => day_struct.part2()
+					DayPart::Part1 => day_struct.part1().expect(&format!("Error executing Day {}, Part {}", D::day(), part)),
+					DayPart::Part2 => day_struct.part2().expect(&format!("Error executing Day {}, Part {}", D::day(), part)),
 				};
 
 				let calcd = result;
