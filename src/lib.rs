@@ -18,6 +18,39 @@ pub mod macros {
 		($dnum: expr) => { include_str!(concat!("../../input/", $dnum, ".txt")) }
 	}
 }
+pub mod parsing {
+	use std::str::FromStr;
+
+	/// Trims the string, and returns it if the length is greater than zero.
+	pub fn trimmed<'a>(s: &'a str) -> Option<&'a str> {
+		let trimmed = s.trim();
+		if trimmed.len() > 0 {
+			Some(trimmed)
+		} else {
+			None
+		}
+	}
+
+	/// Returns a vector containing each line, parsed into the specified type with [`std::str::parse`]. Blank lines are skipped.
+	pub fn from_lines<T: FromStr>(input: &str) -> Result<Vec<T>, T::Err> {
+		input.lines()
+			.filter_map(trimmed)
+			.map(str::parse)
+			.collect::<Result<Vec<T>, T::Err>>()
+	}
+
+	pub fn from_grouped_lines<T: FromStr>(input: &str) -> Result<Vec<Vec<T>>, T::Err> {
+		input.split_terminator("\n\n")
+			.filter_map(trimmed)
+			.map(|s| {
+				s.split_terminator("\n")
+					.filter_map(trimmed)
+					.map(str::parse)
+					.collect::<Result<Vec<T>, T::Err>>()
+			})
+			.collect::<Result<Vec<Vec<T>>, T::Err>>()
+	}
+}
 
 pub fn run_day<D>(inputstr: &str) where D: AoCDay {
 	let inp: Cow<'_, str> = if atty::is(atty::Stream::Stdin) {

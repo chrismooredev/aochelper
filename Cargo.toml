@@ -13,9 +13,10 @@ categories = ["development-tools", "development-tools::cargo-plugins"]
 
 
 [dependencies]
-# cargo-aoc
 clap = "3.0.0-beta.2"
-cargo-edit = "0.7.0"
+
+# Can use public once/if https://github.com/killercup/cargo-edit/pull/437 gets merged
+cargo-edit = { git = "https://github.com/csm123199/cargo-edit" }
 
 # helper stuff
 colored = "1.9.0"

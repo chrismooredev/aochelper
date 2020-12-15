@@ -1,17 +1,18 @@
 
-use std::io;
+use std::{path::Path, io};
 use std::process;
 use std::borrow::Cow;
 use clap::Clap;
-use cargo_edit::Dependency;
+use cargo_edit::{Dependency, RegistryReq};
 
-const DAY_TEMPLATE: &'static str = include_str!("../../day_template.rs");
+const DAY_TEMPLATE_LIB: &'static str = include_str!("../../templates/lib.rs");
+const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
 
 #[derive(Clap)]
 #[clap(version = "0.1.1", author = "Chris M.", about = "Provides a Rust framework for organizing Advent of Code (AoC) challenges")]
 struct Opts {
-	#[clap(short = 'd', long = "install-deps", about = "Installs common dependencies into Cargo.toml")]
-	install_deps: bool,
+	#[clap(short = 'o', long = "omit-deps", about = "Omits common dependencies from Cargo.toml")]
+	omit_deps: bool,
 
 	#[clap(short = 'i', long = "install-dep", about = "Inserts the dependency into Cargo.toml")]
 	install_dep: Vec<String>,
@@ -107,17 +108,33 @@ fn main() -> io::Result<()> {
 
 	// append args to end of Cargo.toml
 
-	let mut vec = Vec::new();
-	vec.push(this_crate());
-	if opts.install_deps {
+	let mut vec: Vec<Dependency> = Vec::new();
+	if ! opts.omit_deps {
+		// TODO: look for custom Cargo.toml workspace option for common deps
 		vec.push(Dependency::new("itertools"));
 	}
 	for dep in &opts.install_dep {
 		vec.push(Dependency::new(&dep));
 	}
 
+	// use cargo_edit to get dependency versions
+	vec.iter_mut()
+		.try_for_each(|dep| -> cargo_edit::Result<()>{
+			// use registries as specified at/above the destination crate's location
+			*dep = cargo_edit::get_latest_dependency(
+				&dep.name,
+				false,
+				RegistryReq::project(None, Path::new(".")),
+			)?;
+			Ok(())
+		})
+		.expect("Unable to determine latest version of a crate");
+
+	// add ourselves - not yet on crates.io so will fail above
+	vec.push(this_crate());
+
 	{
-		let mut manifest = cargo_edit::Manifest::open(&None).expect("Unable to open Cargo.toml");
+		let mut manifest = cargo_edit::Manifest::open(&Some("./Cargo.toml".into())).expect("Unable to open Cargo.toml");
 
 		manifest.add_deps(&["dependencies".into()], &vec).unwrap();
 
@@ -125,11 +142,15 @@ fn main() -> io::Result<()> {
 	}
 	
 	// replace stuff on our template and write it out
-	let day_rs = DAY_TEMPLATE.clone()
+	let day_rs_bin = DAY_TEMPLATE_BIN.clone()
 		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
 		.replace("{{DayName}}", &day_name);
+	std::fs::write("src/main.rs", day_rs_bin)?;
 
-	std::fs::write("src/main.rs", day_rs)?;
+	let day_rs_lib = DAY_TEMPLATE_LIB.clone()
+		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
+		.replace("{{DayName}}", &day_name);
+	std::fs::write("src/lib.rs", day_rs_lib)?;
 
 	Ok(())
 }
