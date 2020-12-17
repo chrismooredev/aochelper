@@ -1,4 +1,4 @@
-use aochelper::{run_day, daystr};
+use aoch::{run_day, daystr};
 use day{{DayNum}}::Day{{DayNum}};
 
 fn main() {

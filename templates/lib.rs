@@ -1,7 +1,7 @@
-use aochelper::{AoCDay, DayResult, DayError};
-use aochelper::daystr;
+use aoch::{AoCDay, DayResult, DayError};
+use aoch::daystr;
 #[cfg(test)] #[allow(unused_imports)]
-use aochelper::{DayPart, run_test, test_runner};
+use aoch::{DayPart, run_test, test_runner};
 
 
 struct Day{{DayNum}} {
@@ -16,7 +16,7 @@ impl AoCDay for Day{{DayNum}} {
 	fn name() -> &'static str { "{{DayName}}" }
 
 	fn parse(input: &str) -> DayResult<Self> {
-		aochelper::parsing::from_lines(input)	
+		aoch::parsing::from_lines(input)	
 			.map(|nums| Day{{DayNum}} { nums })
 			.map_err(|e| e.into())
 	}

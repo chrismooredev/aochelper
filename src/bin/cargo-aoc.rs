@@ -44,7 +44,7 @@ struct CmdNew {
 
 /// Returns a Dependency representing this crate
 fn this_crate() -> Dependency {
-	Dependency::new("aochelper")
+	Dependency::new("aoch")
 		.set_git("https://github.com/csm123199/aochelper", None)
 }
 

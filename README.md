@@ -5,7 +5,7 @@ This library is meant to assist in the structuring, running, and creation of tes
 ## Usage
 Install the command/library globally:
 ```
-cargo install aochelper
+cargo install aoch
 ```
 Then in a folder containing your AoC days, you can run the following to init the project:
 ```
