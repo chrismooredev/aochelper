@@ -12,7 +12,7 @@ use crate::{AoCDay, DayPart};
 // Used to test a day's specific part
 // Note: should refactor to use run_test ?
 pub fn test_runner<D: AoCDay, TS: ToString + fmt::Debug + PartialEq<D::Answer> + Eq>(part: DayPart, cases: &[(&str, TS)]) {
-	for (input, ans) in cases {
+	for (mut input, ans) in cases {
 		match &mut D::parse(input) {
 			Ok(day_struct) => {
 				// Catch any panics each part may throw
@@ -53,7 +53,12 @@ pub fn test_runner<D: AoCDay, TS: ToString + fmt::Debug + PartialEq<D::Answer> +
 					//println!("yay")
 				};
 			},
-			Err(e) => panic!("parsing input `{}` produces error `{}`", input.bold(), format!("{}", e).red()),
+			Err(e) => {
+				if input.len() > 200 {
+					input = &"<too long to display>";
+				}
+				panic!("parsing input `{}` produces error `{}`", input.bold(), format!("{}", e).red())
+			},
 		}
 	}
 	// No return value - implicit success if here
