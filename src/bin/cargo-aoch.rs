@@ -23,9 +23,9 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCmd {
-	/// cargo aoc init <day name>
+	/// cargo aoch init <day name>
 	Init(CmdInit),
-	/// cargo aoc new <day num> <day name>
+	/// cargo aoch new <day num> <day name>
 	New(CmdNew),
 }
 

@@ -9,9 +9,9 @@ cargo install aoch
 ```
 Then in a folder containing your AoC days, you can run the following to init the project:
 ```
-cargo-aoc new <day_num> <day_name>
+cargo-aoch new <day_num> <day_name>
 ```
-(Alternatively run `cargo-aoc init <day_name>` in an already existing folder)
+(Alternatively run `cargo-aoch init <day_name>` in an already existing folder)
 
 ## Why this one?
 (over the many other AoC crates)
@@ -39,6 +39,6 @@ Input `&str`'s can be compared to any data that implements `Eq` - meaning puzzle
 
 Any improvements are welcome as GitHub Pull Requests.
 ## Current Todos
-* Get command to run properly as "`cargo aoc ...`" (Currently my [`clap`](https://crates.io/crates/clap) code isn't configured for this)
+* Get command to run properly as "`cargo aoch ...`" (Currently my [`clap`](https://crates.io/crates/clap) code isn't configured for this)
 * Cleanup test runner code?
 * Be able to display multi-line inputs/outlines properly (use different colors on dedicated lines?)
