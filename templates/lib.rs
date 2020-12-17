@@ -1,10 +1,8 @@
 use aoch::{AoCDay, DayResult, DayError};
-use aoch::daystr;
 #[cfg(test)] #[allow(unused_imports)]
-use aoch::{DayPart, run_test, test_runner};
+use aoch::{DayPart, run_test, test_runner, daystr};
 
-
-struct Day{{DayNum}} {
+pub struct Day{{DayNum}} {
 }
 impl Day{{DayNum}} {
 }
