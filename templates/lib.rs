@@ -1,4 +1,5 @@
-use aoch::{AoCDay, DayResult, DayError};
+use aoch::{AoCDay, DayResult};
+#[allow(unused_imports)] use aoch::DayError;
 #[cfg(test)] #[allow(unused_imports)]
 use aoch::{DayPart, run_test, test_runner, daystr};
 

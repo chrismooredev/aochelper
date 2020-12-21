@@ -1,7 +1,6 @@
 
 use std::{path::Path, io};
 use std::process;
-use std::borrow::Cow;
 use clap::Clap;
 use cargo_edit::{Dependency, RegistryReq};
 
@@ -23,8 +22,6 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCmd {
-	/// cargo aoch init <day name>
-	Init(CmdInit),
 	/// cargo aoch new <day num> <day name>
 	New(CmdNew),
 }
@@ -52,33 +49,6 @@ fn main() -> io::Result<()> {
 	let opts: Opts = Opts::parse();
 
 	let (day_num, day_name): (u8, String) = match opts.subcmd {
-		SubCmd::Init(CmdInit { day_name }) => {
-			// get day num from folder name
-
-			let wholepath = std::env::current_dir()?;
-			let dirname = wholepath
-				.components().last()
-				.expect("unable to get current process directory");
-
-			let dirname_str: Cow<'_, str> = dirname.as_os_str().to_string_lossy();
-
-			let nums: String = dirname_str.chars()
-				.map(|c| if !c.is_numeric() { ' ' } else { c })
-				.collect();
-
-			let trimmed = nums.trim();
-
-			// parse will error if it cannot consume the entire string
-			// eg) string has whitespace between numbers
-			match trimmed.parse() {
-				Ok(n) => (n, day_name),
-				Err(_) => {
-					eprintln!("Unable to retrieve day number from folder name `{}`. Exiting.", nums);
-					eprintln!("\t(are there non-contiguous numbers?)");
-					return Ok(());
-				}
-			}
-		},
 		SubCmd::New(CmdNew { day_num, day_name }) => {
 			// make the folder - cd into it
 			let folder_name = format!("day{:0>2}", day_num);
@@ -152,5 +122,50 @@ fn main() -> io::Result<()> {
 		.replace("{{DayName}}", &day_name);
 	std::fs::write("src/lib.rs", day_rs_lib)?;
 
+	// go back to the directory above this new crate
+	std::env::set_current_dir(
+		std::env::current_dir()?.parent().unwrap()
+	)?;
+	add_day_to_workspace_toml(day_num);
+	
 	Ok(())
+}
+
+fn add_day_to_workspace_toml(day_num: u8) {
+	if let Ok(workspace_toml) = std::fs::read_to_string("Cargo.toml") {
+		use toml_edit::{Document, Item, Value, Table};
+		match workspace_toml.parse::<Document>() {
+			Err(_) => eprintln!("Error parsing workspace Cargo.toml"),
+			Ok(mut toml_doc) => {
+				let doc = toml_doc.as_table_mut();
+				
+				if ! doc.entry("package").is_none() {
+					eprintln!("Not adding new package to current Cargo.toml - this directory's Cargo.toml looks like a crate instead of a workspace.");
+					return;
+				}
+
+				let wkspc = doc.entry("workspace").or_insert(Item::Table(Table::new()));
+				if let Item::Table(wkspc) = wkspc {
+					let members = wkspc.entry("members").or_insert(Item::Table(Table::new()));
+					if let Item::Value(Value::Array(members)) = members {
+						if let Err(_) = members.push(format!("day{:0>2}", day_num)) {
+							eprintln!("workspace::members array does not contain strings");
+						}
+					} else {
+						eprintln!("workspace::members item in workspace toml is not an array");
+					}
+				} else {
+					eprintln!("workspace item in workspace toml is not a table");
+				}
+
+				if let Err(_) = std::fs::write("Cargo.toml", toml_doc.to_string_in_original_order()) {
+					eprintln!("Error writing workspace Cargo.toml");
+				}
+			}
+		}
+	} else if day_num == 1 {
+		// make it
+		std::fs::write("Cargo.toml", "").expect("unable to create a Cargo.toml");
+		add_day_to_workspace_toml(day_num);
+	}
 }
