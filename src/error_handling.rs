@@ -2,6 +2,7 @@
 use std::io;
 use std::fmt;
 use std::error;
+use std::borrow::Cow;
 use std::num::{ParseIntError, ParseFloatError};
 
 // https://stackoverflow.com/a/31749071 - Macros within crates
@@ -52,7 +53,7 @@ macro_rules! ensure {
 
 macro_rules! impl_from_error {
 	($mem: ident, $t: ty) => {
-		impl From<$t> for DayError { fn from(e: $t) -> Self { DayError::$mem(e) } }
+		impl From<$t> for DayError { fn from(e: $t) -> Self { DayError::$mem(e.into()) } }
 	}
 }
 
@@ -65,14 +66,14 @@ pub enum DayError {
 	ParseInt(ParseIntError),
 	ParseFloat(ParseFloatError),
 	Wrapped(Box<dyn error::Error>),
-	Generic(String),
+	Generic(Cow<'static, str>),
 }
 impl DayError {
-	pub fn generic<S: Into<String>>(msg: S) -> DayError {
+	pub fn generic<S: Into<Cow<'static, str>>>(msg: S) -> DayError {
 		DayError::Generic(msg.into())
 	}
 	pub fn from_debug<E: fmt::Debug>(e: E) -> DayError {
-		DayError::Generic(format!("{:?}", e))
+		DayError::Generic(format!("{:?}", e).into())
 	}
 }
 
@@ -80,8 +81,10 @@ impl_from_error!(IOError, io::Error);
 impl_from_error!(ParseInt, ParseIntError);
 impl_from_error!(ParseFloat, ParseFloatError);
 impl_from_error!(Wrapped, Box<dyn error::Error>);
+
+impl_from_error!(Generic, Cow<'static, str>);
+impl_from_error!(Generic, &'static str);
 impl_from_error!(Generic, String);
-impl<'a> From<&'a str> for DayError { fn from(e: &'a str) -> Self { DayError::Generic(e.into()) } }
 
 // Forward Display impl to Debug impl
 impl fmt::Display for DayError {
