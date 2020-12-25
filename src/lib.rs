@@ -1,4 +1,3 @@
-
 use std::borrow::Cow;
 
 pub mod tree_node; // independent helper data structure
@@ -31,7 +30,19 @@ pub mod parsing {
 		}
 	}
 
-	/// Returns a vector containing each line, parsed into the specified type with [`std::str::parse`]. Blank lines are skipped.
+	/// Returns a vector of the specified type, parsed from strings using [`std::str::parse`].
+	///
+	/// Trims whitespace and skips empty strings
+	pub fn from_iter<'a, T: FromStr, I: Iterator<Item = &'a str>>(iter: I) -> Result<Vec<T>, T::Err> {
+		iter
+			.filter_map(trimmed)
+			.map(str::parse)
+			.collect::<Result<Vec<T>, T::Err>>()
+	}
+
+	/// Returns a vector of the specified type, parsed from lines using [`std::str::parse`].
+	///
+	/// Trims whitespace and skips empty lines
 	pub fn from_lines<T: FromStr>(input: &str) -> Result<Vec<T>, T::Err> {
 		input.lines()
 			.filter_map(trimmed)
