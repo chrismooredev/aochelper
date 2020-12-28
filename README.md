@@ -11,7 +11,7 @@ Then in a folder containing your AoC days, you can run the following to init the
 ```
 cargo-aoch new <day_num> <day_name>
 ```
-(Alternatively run `cargo-aoch init <day_name>` in an already existing folder)
+If this is the first day, it will also create a workspace `Cargo.toml` for you. (This is so you can keep an editor like VSCode open to that folder, and have rust-analyzer work properly.)
 
 ## Why this one? (aka: notable features)
 (over the many other AoC crates)

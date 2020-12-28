@@ -3,6 +3,7 @@ use std::{path::Path, io};
 use std::process;
 use clap::Clap;
 use cargo_edit::{Dependency, RegistryReq};
+use toml_edit::Array;
 
 const DAY_TEMPLATE_LIB: &'static str = include_str!("../../templates/lib.rs");
 const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
@@ -146,7 +147,7 @@ fn add_day_to_workspace_toml(day_num: u8) {
 
 				let wkspc = doc.entry("workspace").or_insert(Item::Table(Table::new()));
 				if let Item::Table(wkspc) = wkspc {
-					let members = wkspc.entry("members").or_insert(Item::Table(Table::new()));
+					let members = wkspc.entry("members").or_insert(Item::Value(Value::Array(Array::default())));
 					if let Item::Value(Value::Array(members)) = members {
 						if let Err(_) = members.push(format!("day{:0>2}", day_num)) {
 							eprintln!("workspace::members array does not contain strings");
