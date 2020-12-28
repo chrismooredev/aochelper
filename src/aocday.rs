@@ -1,8 +1,7 @@
-
-use std::str;
-use std::result;
 use std::fmt;
 use std::fmt::Display;
+use std::result;
+use std::str;
 
 use crate::DayError;
 

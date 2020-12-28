@@ -1,13 +1,11 @@
-
-use std::io;
-use std::fmt;
-use std::error;
 use std::borrow::Cow;
-use std::num::{ParseIntError, ParseFloatError};
+use std::error;
+use std::fmt;
+use std::io;
+use std::num::{ParseFloatError, ParseIntError};
 
 // https://stackoverflow.com/a/31749071 - Macros within crates
 // These are inspired by various third-party crate libs
-
 
 /// Exits a function early with an `Error`.
 ///
@@ -53,8 +51,12 @@ macro_rules! ensure {
 
 macro_rules! impl_from_error {
 	($mem: ident, $t: ty) => {
-		impl From<$t> for DayError { fn from(e: $t) -> Self { DayError::$mem(e.into()) } }
-	}
+		impl From<$t> for DayError {
+			fn from(e: $t) -> Self {
+				DayError::$mem(e.into())
+			}
+		}
+	};
 }
 
 // be sure to update the error::Error impl for new variants, if applicable (wrapped data is also an error::Error)

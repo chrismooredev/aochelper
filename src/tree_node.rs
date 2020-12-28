@@ -1,4 +1,3 @@
-
 use std::fmt;
 use std::io;
 
@@ -6,7 +5,7 @@ use std::io;
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct TreeNode<T> {
 	pub data: T,
-	pub children: Vec<TreeNode<T>>
+	pub children: Vec<TreeNode<T>>,
 }
 
 impl<T> TreeNode<T> {
@@ -14,15 +13,12 @@ impl<T> TreeNode<T> {
 	pub fn new(data: T) -> TreeNode<T> {
 		TreeNode {
 			data,
-			children: Vec::new()
+			children: Vec::new(),
 		}
 	}
 	/// Create a non-terminal tree node with `data` and prefilled children
 	pub fn new_with_children(data: T, children: Vec<TreeNode<T>>) -> TreeNode<T> {
-		TreeNode {
-			data,
-			children
-		}
+		TreeNode { data, children }
 	}
 
 	pub fn has_children(&self) -> bool {
@@ -32,12 +28,16 @@ impl<T> TreeNode<T> {
 	pub fn len_children(&self) -> usize {
 		self.children.len()
 	}
-	pub fn contains_recursive(&self, reference: &T) -> bool 
-		where T: PartialEq+Eq {
+	pub fn contains_recursive(&self, reference: &T) -> bool
+	where
+		T: PartialEq + Eq,
+	{
 		if &self.data == reference {
 			return true;
 		}
-		self.children.iter().any(|node| node.contains_recursive(reference))
+		self.children
+			.iter()
+			.any(|node| node.contains_recursive(reference))
 	}
 }
 

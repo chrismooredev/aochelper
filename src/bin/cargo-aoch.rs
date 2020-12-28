@@ -1,20 +1,31 @@
-
-use std::{path::Path, io};
-use std::process;
-use clap::Clap;
 use cargo_edit::{Dependency, RegistryReq};
+use clap::Clap;
+use std::process;
+use std::{io, path::Path};
 use toml_edit::Array;
 
 const DAY_TEMPLATE_LIB: &'static str = include_str!("../../templates/lib.rs");
 const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
 
 #[derive(Clap)]
-#[clap(version = "0.1.1", author = "Chris M.", about = "Provides a Rust framework for organizing Advent of Code (AoC) challenges")]
+#[clap(
+	version = "0.1.1",
+	author = "Chris M.",
+	about = "Provides a Rust framework for organizing Advent of Code (AoC) challenges"
+)]
 struct Opts {
-	#[clap(short = 'o', long = "omit-deps", about = "Omits common dependencies from Cargo.toml")]
+	#[clap(
+		short = 'o',
+		long = "omit-deps",
+		about = "Omits common dependencies from Cargo.toml"
+	)]
 	omit_deps: bool,
 
-	#[clap(short = 'i', long = "install-dep", about = "Inserts the dependency into Cargo.toml")]
+	#[clap(
+		short = 'i',
+		long = "install-dep",
+		about = "Inserts the dependency into Cargo.toml"
+	)]
 	install_dep: Vec<String>,
 
 	#[clap(subcommand)]
@@ -42,8 +53,7 @@ struct CmdNew {
 
 /// Returns a Dependency representing this crate
 fn this_crate() -> Dependency {
-	Dependency::new("aoch")
-		.set_git("https://github.com/csm123199/aochelper", None)
+	Dependency::new("aoch").set_git("https://github.com/csm123199/aochelper", None)
 }
 
 fn main() -> io::Result<()> {
@@ -70,8 +80,8 @@ fn main() -> io::Result<()> {
 		.args(&["init"])
 		.output()
 		.expect("failed to execute process. Cargo not on path?");
-	
-	if ! cinit.status.success() {
+
+	if !cinit.status.success() {
 		eprintln!("`cargo init` has failed. Exiting early.");
 	}
 
@@ -80,7 +90,7 @@ fn main() -> io::Result<()> {
 	// append args to end of Cargo.toml
 
 	let mut vec: Vec<Dependency> = Vec::new();
-	if ! opts.omit_deps {
+	if !opts.omit_deps {
 		// TODO: look for custom Cargo.toml workspace option for common deps
 		vec.push(Dependency::new("itertools"));
 	}
@@ -90,7 +100,7 @@ fn main() -> io::Result<()> {
 
 	// use cargo_edit to get dependency versions
 	vec.iter_mut()
-		.try_for_each(|dep| -> cargo_edit::Result<()>{
+		.try_for_each(|dep| -> cargo_edit::Result<()> {
 			// use registries as specified at/above the destination crate's location
 			*dep = cargo_edit::get_latest_dependency(
 				&dep.name,
@@ -105,49 +115,56 @@ fn main() -> io::Result<()> {
 	vec.push(this_crate());
 
 	{
-		let mut manifest = cargo_edit::Manifest::open(&Some("./Cargo.toml".into())).expect("Unable to open Cargo.toml");
+		let mut manifest = cargo_edit::Manifest::open(&Some("./Cargo.toml".into()))
+			.expect("Unable to open Cargo.toml");
 
 		manifest.add_deps(&["dependencies".into()], &vec).unwrap();
 
-		manifest.write_to_file(&mut std::fs::File::create("Cargo.toml").expect("Unable to open Cargo.toml")).expect("Error writing Cargo.toml");
+		manifest
+			.write_to_file(
+				&mut std::fs::File::create("Cargo.toml").expect("Unable to open Cargo.toml"),
+			)
+			.expect("Error writing Cargo.toml");
 	}
-	
+
 	// replace stuff on our template and write it out
-	let day_rs_bin = DAY_TEMPLATE_BIN.clone()
+	let day_rs_bin = DAY_TEMPLATE_BIN
+		.clone()
 		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
 		.replace("{{DayName}}", &day_name);
 	std::fs::write("src/main.rs", day_rs_bin)?;
 
-	let day_rs_lib = DAY_TEMPLATE_LIB.clone()
+	let day_rs_lib = DAY_TEMPLATE_LIB
+		.clone()
 		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
 		.replace("{{DayName}}", &day_name);
 	std::fs::write("src/lib.rs", day_rs_lib)?;
 
 	// go back to the directory above this new crate
-	std::env::set_current_dir(
-		std::env::current_dir()?.parent().unwrap()
-	)?;
+	std::env::set_current_dir(std::env::current_dir()?.parent().unwrap())?;
 	add_day_to_workspace_toml(day_num);
-	
+
 	Ok(())
 }
 
 fn add_day_to_workspace_toml(day_num: u8) {
 	if let Ok(workspace_toml) = std::fs::read_to_string("Cargo.toml") {
-		use toml_edit::{Document, Item, Value, Table};
+		use toml_edit::{Document, Item, Table, Value};
 		match workspace_toml.parse::<Document>() {
 			Err(_) => eprintln!("Error parsing workspace Cargo.toml"),
 			Ok(mut toml_doc) => {
 				let doc = toml_doc.as_table_mut();
-				
-				if ! doc.entry("package").is_none() {
+
+				if !doc.entry("package").is_none() {
 					eprintln!("Not adding new package to current Cargo.toml - this directory's Cargo.toml looks like a crate instead of a workspace.");
 					return;
 				}
 
 				let wkspc = doc.entry("workspace").or_insert(Item::Table(Table::new()));
 				if let Item::Table(wkspc) = wkspc {
-					let members = wkspc.entry("members").or_insert(Item::Value(Value::Array(Array::default())));
+					let members = wkspc
+						.entry("members")
+						.or_insert(Item::Value(Value::Array(Array::default())));
 					if let Item::Value(Value::Array(members)) = members {
 						if let Err(_) = members.push(format!("day{:0>2}", day_num)) {
 							eprintln!("workspace::members array does not contain strings");
@@ -159,7 +176,8 @@ fn add_day_to_workspace_toml(day_num: u8) {
 					eprintln!("workspace item in workspace toml is not a table");
 				}
 
-				if let Err(_) = std::fs::write("Cargo.toml", toml_doc.to_string_in_original_order()) {
+				if let Err(_) = std::fs::write("Cargo.toml", toml_doc.to_string_in_original_order())
+				{
 					eprintln!("Error writing workspace Cargo.toml");
 				}
 			}
