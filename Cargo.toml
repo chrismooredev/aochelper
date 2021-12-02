@@ -13,7 +13,7 @@ categories = ["development-tools", "development-tools::cargo-plugins"]
 
 
 [dependencies]
-clap = "3.0.0-beta.2"
+clap = "=3.0.0-beta.5"
 toml_edit = "0.2.0"
 
 # Can use public once/if https://github.com/killercup/cargo-edit/pull/437 gets merged

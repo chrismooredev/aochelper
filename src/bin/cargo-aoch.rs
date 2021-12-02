@@ -1,5 +1,5 @@
 use cargo_edit::{Dependency, RegistryReq};
-use clap::Clap;
+use clap::Parser;
 use std::process;
 use std::{io, path::Path};
 use toml_edit::Array;
@@ -7,7 +7,7 @@ use toml_edit::Array;
 const DAY_TEMPLATE_LIB: &'static str = include_str!("../../templates/lib.rs");
 const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
 
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(
 	version = "0.1.1",
 	author = "Chris M.",
@@ -32,18 +32,18 @@ struct Opts {
 	subcmd: SubCmd,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 enum SubCmd {
 	/// cargo aoch new <day num> <day name>
 	New(CmdNew),
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct CmdInit {
 	day_name: String,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct CmdNew {
 	#[clap(about = "The day's number. Should be within the range of [1, 25]")]
 	day_num: u8,
