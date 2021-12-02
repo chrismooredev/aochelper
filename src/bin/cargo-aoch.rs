@@ -1,5 +1,6 @@
 use cargo_edit::{Dependency, RegistryReq};
 use clap::Parser;
+use std::ffi::OsString;
 use std::process;
 use std::{io, path::Path};
 use toml_edit::Array;
@@ -9,7 +10,7 @@ const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
 
 #[derive(Parser)]
 #[clap(
-	version = "0.1.1",
+	version = clap::crate_version!(),
 	author = "Chris M.",
 	about = "Provides a Rust framework for organizing Advent of Code (AoC) challenges"
 )]
@@ -57,7 +58,17 @@ fn this_crate() -> Dependency {
 }
 
 fn main() -> io::Result<()> {
-	let opts: Opts = Opts::parse();
+	let mut args: Vec<OsString> = std::env::args_os().collect();
+
+	// enable running as `cargo aoch ...` instead of `cargo-aoch ...`
+	match args.get(1) {
+		Some(sec) if sec == "aoch" => {
+			args.remove(1);
+		},
+		_ => {},
+	}
+
+	let opts: Opts = Opts::parse_from(args);
 
 	let (day_num, day_name): (u8, String) = match opts.subcmd {
 		SubCmd::New(CmdNew { day_num, day_name }) => {
