@@ -7,6 +7,7 @@ use toml_edit::Array;
 
 const DAY_TEMPLATE_LIB: &'static str = include_str!("../../templates/lib.rs");
 const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
+const GITIGNORE: &'static str = include_str!("../../templates/gitignore");
 
 #[derive(Parser)]
 #[clap(
@@ -70,20 +71,19 @@ fn main() -> io::Result<()> {
 
 	let opts: Opts = Opts::parse_from(args);
 
-	let (day_num, day_name): (u8, String) = match opts.subcmd {
-		SubCmd::New(CmdNew { day_num, day_name }) => {
-			// make the folder - cd into it
-			let folder_name = format!("day{:0>2}", day_num);
-			if let Err(e) = std::fs::create_dir(&folder_name) {
-				eprintln!("Unable to create folder `{}`. Exiting.", folder_name);
-				eprintln!("{}", e.to_string());
-				return Ok(());
-			}
-			std::env::set_current_dir(&folder_name)?;
+	// can be switched to match if more subcommands are added
+	let SubCmd::New(CmdNew { day_num, day_name }) = opts.subcmd;
 
-			(day_num, day_name)
-		}
-	};
+	add_day_to_workspace_toml(day_num);
+
+	// create and enter the day's specific folder
+	let folder_name = format!("day{:0>2}", day_num);
+	if let Err(e) = std::fs::create_dir(&folder_name) {
+		eprintln!("Unable to create folder `{}`. Exiting.", folder_name);
+		eprintln!("{}", e.to_string());
+		return Ok(());
+	}
+	std::env::set_current_dir(&folder_name)?;
 
 	// NOW INSIDE DAY'S FOLDER
 
@@ -151,10 +151,6 @@ fn main() -> io::Result<()> {
 		.replace("{{DayName}}", &day_name);
 	std::fs::write("src/lib.rs", day_rs_lib)?;
 
-	// go back to the directory above this new crate
-	std::env::set_current_dir(std::env::current_dir()?.parent().unwrap())?;
-	add_day_to_workspace_toml(day_num);
-
 	Ok(())
 }
 
@@ -194,8 +190,20 @@ fn add_day_to_workspace_toml(day_num: u8) {
 			}
 		}
 	} else if day_num == 1 {
-		// make it
+		// new repo - init git, etc
 		std::fs::write("Cargo.toml", "").expect("unable to create a Cargo.toml");
 		add_day_to_workspace_toml(day_num);
+
+		match git2::Repository::init(".") {
+			Ok(_) => {
+				// add .gitignore
+				if let Err(e) = std::fs::write(".gitignore", GITIGNORE) {
+					eprintln!("error writing workspace .gitignore: {}", e);
+				}
+			},
+			Err(e) => eprintln!("failed to init git repo for workspace: {}", e),
+		}
+	} else {
+		eprintln!("No workspace found, but trying to initialize a non-first day. Exiting.");
 	}
 }

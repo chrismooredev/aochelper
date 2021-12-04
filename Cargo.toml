@@ -1,6 +1,6 @@
 [package]
 name = "aoch"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Chris Moore"]
 edition = "2018"
 description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
@@ -15,6 +15,7 @@ categories = ["development-tools", "development-tools::cargo-plugins"]
 [dependencies]
 clap = "=3.0.0-beta.5"
 toml_edit = "0.2.0"
+git2 = { version = "0.13.25", default-features = false }
 
 # Can use public once/if https://github.com/killercup/cargo-edit/pull/437 gets merged
 cargo-edit = { git = "https://github.com/csm123199/cargo-edit" }

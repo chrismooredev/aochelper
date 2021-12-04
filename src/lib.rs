@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::ffi::OsString;
 
 pub mod tree_node; // independent helper data structure
 
@@ -69,20 +70,32 @@ pub mod parsing {
 }
 
 pub fn run_day<D: AoCDay>(inputstr: &str) {
-	let inp: Cow<'_, str> = if atty::is(atty::Stream::Stdin) {
-		Cow::Borrowed(inputstr)
-	} else {
-		use std::io::Read;
+	use std::io::Read;
 
-		eprintln!("Note: Using stdin for puzzle input, since it's not a TTY");
-		let stdin: std::io::Stdin = std::io::stdin();
-		let mut input = String::new();
-		stdin
-			.lock()
-			.read_to_string(&mut input)
-			.expect("io error reading stdin");
+	let args: Vec<OsString> = std::env::args_os().collect();
+	if args.len() > 2 {
+		eprintln!("Usage: {:?} [input file]", args[0]);
+		eprintln!("If no input file is provided, then an embedded input will be used instead.");
+		eprintln!("If input is '-' then input is read from stdin.");
+		return;
+	}
 
-		Cow::Owned(input)
+	let inp: Cow<'_, str> = match args.get(1) {
+		None => Cow::Borrowed(inputstr),
+		Some(s) if s == "-" => {
+			let mut input = String::new();
+			let stdin: std::io::Stdin = std::io::stdin();
+		
+			stdin
+				.lock()
+				.read_to_string(&mut input)
+				.expect("io error reading stdin");
+
+			Cow::Owned(input)
+		},
+		Some(s) => {
+			Cow::Owned(std::fs::read_to_string(s).expect("io error reading from file"))
+		}
 	};
 
 	let mut parsed = D::parse(inp.as_ref()).unwrap();
