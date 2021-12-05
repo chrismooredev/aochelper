@@ -1,6 +1,6 @@
 [package]
 name = "aoch"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Chris Moore"]
 edition = "2018"
 description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
@@ -24,3 +24,4 @@ cargo-edit = { git = "https://github.com/csm123199/cargo-edit" }
 colored = "1.9.0"
 ptree = "0.2.1"
 atty = "0.2.13"
+thiserror = "1.0.30"

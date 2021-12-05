@@ -49,25 +49,16 @@ macro_rules! ensure {
 	};
 }
 
-macro_rules! impl_from_error {
-	($mem: ident, $t: ty) => {
-		impl From<$t> for DayError {
-			fn from(e: $t) -> Self {
-				DayError::$mem(e.into())
-			}
-		}
-	};
-}
 
 // be sure to update the error::Error impl for new variants, if applicable (wrapped data is also an error::Error)
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum DayError {
 	/// A day, or part of a day, is not yet implemented.
 	Unimplemented,
-	IOError(io::Error),
-	ParseInt(ParseIntError),
-	ParseFloat(ParseFloatError),
-	Wrapped(Box<dyn error::Error>),
+	IOError(#[from] io::Error),
+	ParseInt(#[from] ParseIntError),
+	ParseFloat(#[from] ParseFloatError),
+	Wrapped(#[from] Box<dyn error::Error>),
 	Generic(Cow<'static, str>),
 }
 impl DayError {
@@ -77,12 +68,20 @@ impl DayError {
 	pub fn from_debug<E: fmt::Debug>(e: E) -> DayError {
 		DayError::Generic(format!("{:?}", e).into())
 	}
+	pub fn boxed<E: 'static + error::Error>(e: E) -> DayError {
+		DayError::Wrapped(Box::new(e))
+	}
 }
 
-impl_from_error!(IOError, io::Error);
-impl_from_error!(ParseInt, ParseIntError);
-impl_from_error!(ParseFloat, ParseFloatError);
-impl_from_error!(Wrapped, Box<dyn error::Error>);
+macro_rules! impl_from_error {
+	($mem: ident, $t: ty) => {
+		impl From<$t> for DayError {
+			fn from(e: $t) -> Self {
+				DayError::$mem(e.into())
+			}
+		}
+	};
+}
 
 impl_from_error!(Generic, Cow<'static, str>);
 impl_from_error!(Generic, &'static str);
@@ -95,18 +94,6 @@ impl fmt::Display for DayError {
 		match self {
 			Generic(s) => fmt::Display::fmt(s, f),
 			_ => fmt::Debug::fmt(self, f),
-		}
-	}
-}
-impl error::Error for DayError {
-	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-		use DayError::*;
-		match &self {
-			IOError(e) => Some(e),
-			ParseInt(e) => Some(e),
-			ParseFloat(e) => Some(e),
-			Wrapped(e) => Some(e.as_ref()),
-			_ => None,
 		}
 	}
 }
