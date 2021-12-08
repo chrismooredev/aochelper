@@ -33,6 +33,25 @@ pub mod parsing {
 		}
 	}
 
+	/// Takes each line with content, and passes them pre-trimmed to the mapping function
+	pub fn try_from_lines_with<T, E, F: FnMut(&str) -> Result<T, E>>(input: &str, map: F) -> Result<Vec<T>, E> {
+		input
+			.lines()
+			.filter_map(trimmed)
+			.map(map)
+			.collect::<Result<Vec<T>, E>>()
+	}
+
+	/// Takes each line with content, and passes them pre-trimmed to the mapping function
+	pub fn from_lines_with<T, F: FnMut(&str) -> T>(input: &str, map: F) -> Vec<T> {
+		input
+			.lines()
+			.filter_map(trimmed)
+			.map(map)
+			.collect::<Vec<T>>()
+	}
+
+
 	/// Returns a vector of the specified type, parsed from strings using [`std::str::parse`].
 	///
 	/// Trims whitespace and skips empty strings
