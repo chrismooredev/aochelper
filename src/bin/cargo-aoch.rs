@@ -104,6 +104,7 @@ fn main() -> io::Result<()> {
 	if !opts.omit_deps {
 		// TODO: look for custom Cargo.toml workspace option for common deps
 		vec.push(Dependency::new("itertools"));
+		vec.push(Dependency::new("thiserror"));
 	}
 	for dep in &opts.install_dep {
 		vec.push(Dependency::new(&dep));

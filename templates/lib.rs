@@ -1,5 +1,8 @@
+#![allow(unused_imports)]
+use std::str::FromStr;
+use itertools::Itertools;
 use aoch::{AoCDay, DayResult};
-#[allow(unused_imports)] use aoch::DayError;
+use aoch::DayError;
 #[cfg(test)] #[allow(unused_imports)]
 use aoch::{DayPart, run_test, test_runner, daystr};
 
