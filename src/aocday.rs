@@ -1,33 +1,32 @@
 use std::fmt;
-use std::fmt::Display;
-use std::result;
+use std::panic::UnwindSafe;
 use std::str;
 
-use crate::DayError;
+pub trait AoCDay: fmt::Debug + Sized + UnwindSafe + Clone + Copy {
+	type Data: fmt::Debug;
+	type Answer: fmt::Debug + fmt::Display + PartialEq + Eq;
 
-pub type DayResult<T> = result::Result<T, DayError>;
-pub trait AoCDay: Sized {
-	type Answer: PartialEq + Eq + fmt::Debug + Display;
+	/// The day's number.
+	fn day(&self) -> u8;
 
-	/// The display name of the puzzle. Ex: "Growing Pots"
-	fn day() -> u8;
-	fn name() -> &'static str;
+	/// Parses the raw input into a useable format. Input validation is recommended, and should be clonable for multiple uses.
+	fn parse(&self, input: &str) -> Self::Data;
 
-	/// The parsing function. This should parse the input data into each day's own struct/data.
-	fn parse(input: &str) -> DayResult<Self>;
+	/// Part 1 implementation.
+	fn part1(&self, data: &mut Self::Data) -> Self::Answer;
 
-	/// Part 1 implementation. T is for a direct value for tests, Box<dyn Display> is for displaying the result.
-	fn part1(&mut self) -> DayResult<Self::Answer>;
-	/// Part 2 implementation. T is for a direct value for tests, Box<dyn Display> is for displaying the result.
-	/// If the result of part1 is needed for part2, then it should be stored in Self
-	fn part2(&mut self) -> DayResult<Self::Answer>;
+	/// Part 2 implementation.
+	/// 
+	/// If the result of part1 is needed for part2, then it should be recomputed, or stored in the day struct.
+	fn part2(&self, data: &mut Self::Data) -> Self::Answer;
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum DayPart {
 	Part1,
 	Part2,
 }
-impl Display for DayPart {
+impl fmt::Display for DayPart {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			DayPart::Part1 => write!(f, "Part 1"),

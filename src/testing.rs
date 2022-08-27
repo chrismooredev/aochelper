@@ -1,102 +1,120 @@
 use std::fmt;
 use std::panic;
 
-#[allow(unused_imports)]
 use colored::Colorize;
 
 use crate::{AoCDay, DayPart};
 
-//TODO: See about consolidating the logic of these two functions
+/// Lines shown if parsing/logic panics
+const LINES: usize = 10;
 
 // Used to test a day's specific part
-// Note: should refactor to use run_test ?
-pub fn test_runner<D, TS>(part: DayPart, cases: &[(&str, TS)])
+pub fn test_runner<'a, Day, Ans>(day: Day, part: DayPart, cases: &[(&str, Ans)])
 where
-	D: AoCDay,
-	TS: ToString + fmt::Debug + PartialEq<D::Answer> + Eq,
+	Day: AoCDay,
+	Ans: ToString + fmt::Debug + PartialEq<Day::Answer> + Eq,
 {
-	for (mut input, ans) in cases {
-		match &mut D::parse(input) {
-			Ok(day_struct) => {
-				// Catch any panics each part may throw
-				// TODO: implement chain_err or something
-				let result: D::Answer = match part {
-					DayPart::Part1 => day_struct.part1().expect(&format!(
-						"Error executing Day {}, Part {}",
-						D::day(),
-						part
-					)),
-					DayPart::Part2 => day_struct.part2().expect(&format!(
-						"Error executing Day {}, Part {}",
-						D::day(),
-						part
-					)),
-				};
-
-				let calcd = result;
-				if ans.to_string() != calcd.to_string() {
-					// limit input string to 10 lines
-					let short_input: String = {
-						const LINES: usize = 10;
-						let lines: Vec<&str> = input.lines().collect();
-						if lines.len() < LINES {
-							input.to_string()
-						} else {
-							let lines_first_few = lines.split_at(LINES).0;
-							let mut s = String::new();
-							for line in lines_first_few {
-								if s.len() > 0 {
-									s += "\n";
-								}
-								s += line;
-							}
-							if lines_first_few.len() == LINES {
-								s += "\n...";
-							}
-							s
-						}
-					};
-
-					panic!(
-						"input '{}': expected `{}` got `{}`",
-						short_input.bold(),
-						format!("{}", ans.to_string().green()),
-						format!("{}", calcd.to_string().red())
-					);
-				} else {
-					//println!("yay")
-				};
-			}
+	run_test(|&input| {
+		let mut data: Day::Data = match panic::catch_unwind(move || day.parse(input)) {
+			Ok(ds) => ds,
 			Err(e) => {
-				if input.len() > 200 {
-					input = &"<too long to display>";
-				}
+				let input = (input.len() <= 200)
+					.then(|| input).unwrap_or("<too long to display>");
 				panic!(
-					"parsing input `{}` produces error `{}`",
+					"error parsing input: `{}` (input = {:?})",
+					format!("{:?}", e).red(),
 					input.bold(),
-					format!("{}", e).red()
 				)
 			}
-		}
-	}
-	// No return value - implicit success if here
+		};
+
+		let result: Day::Answer = match part {
+			DayPart::Part1 => day.part1(&mut data),
+			DayPart::Part2 => day.part2(&mut data),
+		};
+
+		result
+	}, cases);
 }
 
 // Used to test a specific function in a day
-pub fn run_test<I, O, F>(func: F, cases: &[(I, O)])
+pub fn run_test_pretty<I, E, O, F>(func: F, cases: &[(I, E)])
 where
-	I: fmt::Debug + Sized,
-	O: PartialEq<O> + Eq + fmt::Debug,
+	I: fmt::Debug + Sized + ToString,
+	E: fmt::Debug + PartialEq<O> + Eq,
+	O: fmt::Debug,
 	F: for<'a> Fn(&'a I) -> O,
 {
-	for (case, expected) in cases {
+	for (i, (case, expected)) in cases.iter().enumerate() {
 		let generated = func(case);
 		if *expected != generated {
+			// limit input string to 10 lines
+			let short_input: String = {
+				
+				let input = case.to_string();
+				let mut newlines = input.char_indices()
+					.filter(|&(_, c)| c == '\n')
+					.skip(LINES);
+		
+				match newlines.next() {
+					None => input,
+					Some((i, _)) => {
+						let rest = newlines.count();
+						let mut sinput = input[..i].to_string();
+						sinput += &format!("\n...<{} more lines>...", rest);
+						sinput
+					}
+				}
+			};
+
 			panic!(
-				"for input '{}': expected `{}` got `{}`",
-				format!("{:?}", case).bold(),
+				"input #{} - '{}': expected `{}` got `{}` for input #{}",
+				i,
+				short_input.bold(),
 				format!("{:?}", expected).green(),
-				format!("{:?}", generated).red()
+				format!("{:?}", generated).red(),
+				i,
+			);
+		};
+	}
+}
+
+pub fn run_test<I, E, O, F>(func: F, cases: &[(I, E)])
+where
+	I: fmt::Debug + Sized,
+	E: fmt::Debug + PartialEq<O> + Eq,
+	O: fmt::Debug,
+	F: for<'a> Fn(&'a I) -> O,
+{
+	for (i, (case, expected)) in cases.iter().enumerate() {
+		let generated = func(case);
+		if *expected != generated {
+			// limit input string to 10 lines
+			let short_input: String = {
+				
+				let input = format!("{:?}", case);
+				let mut newlines = input.char_indices()
+					.filter(|&(_, c)| c == '\n')
+					.skip(LINES);
+		
+				match newlines.next() {
+					None => input,
+					Some((i, _)) => {
+						let rest = newlines.count();
+						let mut sinput = input[..i].to_string();
+						sinput += &format!("\n...<{} more lines>...", rest);
+						sinput
+					}
+				}
+			};
+
+			panic!(
+				"input #{} - '{}': expected `{}` got `{}` for input #{}",
+				i,
+				short_input.bold(),
+				format!("{:?}", expected).green(),
+				format!("{:?}", generated).red(),
+				i,
 			);
 		};
 	}

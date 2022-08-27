@@ -1,36 +1,42 @@
 #![allow(unused_imports)]
 use std::str::FromStr;
+use std::fmt::Debug;
 use itertools::Itertools;
 use aoch::{AoCDay, DayResult};
 use aoch::DayError;
 #[cfg(test)] #[allow(unused_imports)]
 use aoch::{DayPart, run_test, test_runner, daystr};
 
-pub struct Day{{DayNum}} {
-}
-impl Day{{DayNum}} {
-}
+#[derive(Debug)]
+pub struct Day{{DayNum}};
 
 impl AoCDay for Day{{DayNum}} {
+	type Data = ();
 	type Answer = usize;
 
-	fn day() -> u8 { {{DayNum}} }
-	fn name() -> &'static str { "{{DayName}}" }
+	fn day(&self) -> u8 { {{DayNum}} }
 
-	fn parse(input: &str) -> DayResult<Self> {
+	fn parse(&self, input: &str) -> Self::Data {
 		aoch::parsing::from_lines(input)	
-			.map(|nums| Day{{DayNum}} { nums })
+			.map(|nums| Self::Data { nums })
 			.map_err(|e| e.into())
 	}
-	fn part1(&mut self) -> DayResult<Self::Answer> {
-		Err(DayError::Unimplemented)
+	fn part1(&self, data: &mut Self::Data) -> Self::Answer {
+		todo!("Day {{DayNum}} Part 1")
 	}
-	fn part2(&mut self) -> DayResult<Self::Answer> {
-		Err(DayError::Unimplemented)
+	fn part2(&self, data: &mut Self::Data) -> Self::Answer {
+		todo!("Day {{DayNum}} Part 2")
 	}
 }
 
 /*
+#[cfg(test)]
+const TEST_INPUT: &'static str = "
+1-3 a: abcde
+1-3 b: cdefg
+2-9 c: ccccccccc
+";
+
 #[test]
 fn fuel_calc() {
 	let cases = [
@@ -39,13 +45,6 @@ fn fuel_calc() {
 	run_test(|n| DayMe::calc_fuel(*n), &cases);
 }
 */
-
-#[cfg(test)]
-const TEST_INPUT: &'static str = "
-1-3 a: abcde
-1-3 b: cdefg
-2-9 c: ccccccccc
-";
 
 #[test]
 fn part1() {

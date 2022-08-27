@@ -1,6 +1,6 @@
 [package]
 name = "aoch"
-version = "0.3.7"
+version = "1.0.0"
 authors = ["Chris Moore"]
 edition = "2018"
 description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
@@ -13,25 +13,11 @@ categories = ["development-tools", "development-tools::cargo-plugins"]
 
 
 [dependencies]
-clap = { version = "=3.0.0-beta.5", optional = true }
-toml_edit = { version = "0.2.0", optional = true }
-git2 = { version = "0.13.25", optional = true, default-features = false }
-reqwest = { version = "0.11.7", optional = true, features = ["blocking", "cookies"] }
-chrono = { version = "0.4.19", optional = true }
-
-# Can use public once/if https://github.com/killercup/cargo-edit/pull/437 gets merged
-cargo-edit = { git = "https://github.com/csm123199/cargo-edit", optional = true }
-
-# helper stuff
-colored = "1.9.0"
-ptree = "0.2.1"
+colored = "2.0.0"
+ptree = "0.4.0"
 atty = "0.2.13"
-thiserror = "1.0.30"
+thiserror = "1.0.32"
+aoch-proc = { path = "./aoch-proc" }
 
-[features]
-build-binary = ["clap", "toml_edit", "git2", "reqwest", "chrono", "cargo-edit"]
-
-[[bin]]
-name = "cargo-aoch"
-required-features = ["build-binary"]
-
+[workspace]
+members = [".", "aoch-proc"]

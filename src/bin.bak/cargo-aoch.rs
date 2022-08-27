@@ -1,7 +1,10 @@
-use cargo_edit::{Dependency, RegistryReq};
+// use cargo_edit::{Dependency, RegistryReq};
+use chrono::Datelike;
 use clap::Parser;
+use reqwest::Url;
 use std::ffi::OsString;
 use std::process;
+use std::sync::Arc;
 use std::{io, path::Path};
 use toml_edit::Array;
 
@@ -48,14 +51,39 @@ struct CmdInit {
 #[derive(Parser)]
 struct CmdNew {
 	#[clap(about = "The day's number. Should be within the range of [1, 25]")]
-	day_num: u8,
+	day_num: Option<u8>,
 	#[clap(about = "The textual name/theme of the day")]
-	day_name: String,
+	day_name: Option<String>,
 }
 
 /// Returns a Dependency representing this crate
-fn this_crate() -> Dependency {
-	Dependency::new("aoch").set_git("https://github.com/csm123199/aochelper", None)
+// fn this_crate() -> Dependency {
+// 	Dependency::new("aoch").set_git("https://github.com/csm123199/aochelper", None)
+// }
+
+fn download_input(year: i64, day: u8, session: &str) -> Result<(), Box<dyn std::error::Error>> {
+	if let Err(e) = std::fs::create_dir("./input") {
+		if e.kind() != std::io::ErrorKind::AlreadyExists {
+			return Err(e.into());
+		}
+	}
+
+	let jar = reqwest::cookie::Jar::default();
+	let hostname = "adventofcode.com";
+	let url = format!("https://{}", hostname).parse::<Url>().unwrap();
+	jar.add_cookie_str(&format!("session={}; Domain={}", session, hostname), &url);
+
+	let client = reqwest::blocking::Client::builder()
+		.cookie_provider(Arc::new(jar))
+		.build().expect("error occured while creating reqwest http client");
+
+	let resp = client.get(format!("https://{}/{}/day/{}/input", hostname, year, day))
+		.send()?
+		.bytes()?;
+
+	std::fs::write(format!("input/{:>02}.txt", day), resp)?;
+
+	Ok(())
 }
 
 fn main() -> io::Result<()> {
@@ -73,8 +101,19 @@ fn main() -> io::Result<()> {
 
 	// can be switched to match if more subcommands are added
 	let SubCmd::New(CmdNew { day_num, day_name }) = opts.subcmd;
+	let day_num = day_num.unwrap_or(chrono::Utc::now().day() as u8);
+	let day_name = day_name.unwrap_or_else(|| String::new());
 
-	add_day_to_workspace_toml(day_num);
+	let mut year: Option<i64> = None;
+	let session_cookie = add_day_to_workspace_toml(&mut year, day_num);
+	let act_year = year.unwrap();
+
+	// download the day's input
+	if let Some(session) = session_cookie {
+		if let Err(e) = download_input(act_year, day_num, &session) {
+			eprintln!("error downloading input: {}", e);
+		}
+	}
 
 	// create and enter the day's specific folder
 	let folder_name = format!("day{:0>2}", day_num);
@@ -155,7 +194,10 @@ fn main() -> io::Result<()> {
 	Ok(())
 }
 
-fn add_day_to_workspace_toml(day_num: u8) {
+/// Adds the specified day to the workspace's Cargo.toml, and returns a session token string, if found
+fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<String> {
+	let mut session_cookie: Option<String> = None;
+
 	if let Ok(workspace_toml) = std::fs::read_to_string("Cargo.toml") {
 		use toml_edit::{Document, Item, Table, Value};
 		match workspace_toml.parse::<Document>() {
@@ -165,7 +207,7 @@ fn add_day_to_workspace_toml(day_num: u8) {
 
 				if !doc.entry("package").is_none() {
 					eprintln!("Not adding new package to current Cargo.toml - this directory's Cargo.toml looks like a crate instead of a workspace.");
-					return;
+					return None;
 				}
 
 				let wkspc = doc.entry("workspace").or_insert(Item::Table(Table::new()));
@@ -175,13 +217,47 @@ fn add_day_to_workspace_toml(day_num: u8) {
 						.or_insert(Item::Value(Value::Array(Array::default())));
 					if let Item::Value(Value::Array(members)) = members {
 						if let Err(_) = members.push(format!("day{:0>2}", day_num)) {
-							eprintln!("workspace::members array does not contain strings");
+							eprintln!("[error] workspace::members array does not contain strings");
 						}
 					} else {
-						eprintln!("workspace::members item in workspace toml is not an array");
+						eprintln!("[error] workspace::members item in workspace toml is not an array");
+					}
+
+					let meta = wkspc.entry("metadata").or_insert(Item::Table(Table::new()));
+					if let Item::Table(meta) = meta {
+						meta.set_implicit(true);
+						let aoch = meta.entry("aoch").or_insert(Item::Table(Table::new()));
+						if let Item::Table(aoch) = aoch {
+							if let Some(Item::Value(Value::String(session))) = aoch.get("session") {
+								session_cookie = Some(session.value().clone());
+							}
+
+
+							// no expected year, populate current year in toml
+							// no expected year, already exists year in toml (return in &mut Option)
+							// expected year, assert against year in toml
+							// expected year, populate year in toml
+							let yr = aoch.entry("year");
+							yr.or_insert(Item::Value(year.unwrap_or_else(|| chrono::Utc::now().year() as i64).into()));
+
+							// yr could include actual, expected, or saved
+							// year is just expected
+							if let Some(doc_yr) = yr.as_integer() {
+								if let Some(exp_yr) = year {
+									if doc_yr != *exp_yr {
+										eprintln!("[error] workspace::metadata::aoch::year was expected to be {}, but was actually {}", exp_yr, doc_yr);
+									}
+								}
+
+								// 'return' the document's year to the caller, overwriting expected
+								let _ = year.insert(doc_yr);
+							} else {
+								eprintln!("[error] workspace::metadata::aoch::year was not an integer");
+							}
+						}
 					}
 				} else {
-					eprintln!("workspace item in workspace toml is not a table");
+					eprintln!("[error] workspace item in workspace toml is not a table");
 				}
 
 				if let Err(_) = std::fs::write("Cargo.toml", toml_doc.to_string_in_original_order())
@@ -193,18 +269,20 @@ fn add_day_to_workspace_toml(day_num: u8) {
 	} else if day_num == 1 {
 		// new repo - init git, etc
 		std::fs::write("Cargo.toml", "").expect("unable to create a Cargo.toml");
-		add_day_to_workspace_toml(day_num);
+		add_day_to_workspace_toml(year, day_num);
 
 		match git2::Repository::init(".") {
 			Ok(_) => {
 				// add .gitignore
 				if let Err(e) = std::fs::write(".gitignore", GITIGNORE) {
-					eprintln!("error writing workspace .gitignore: {}", e);
+					eprintln!("[error] error writing workspace .gitignore: {}", e);
 				}
 			},
-			Err(e) => eprintln!("failed to init git repo for workspace: {}", e),
+			Err(e) => eprintln!("[error] failed to init git repo for workspace: {}", e),
 		}
 	} else {
 		eprintln!("No workspace found, but trying to initialize a non-first day. Exiting.");
 	}
+
+	session_cookie
 }

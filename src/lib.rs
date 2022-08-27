@@ -4,14 +4,14 @@ use std::ffi::OsString;
 pub mod tree_node; // independent helper data structure
 
 pub mod aocday;
-#[macro_use]
-pub mod error_handling;
+//#[macro_use]
+//pub mod error_handling;
 pub mod testing;
 
-pub use aocday::{AoCDay, DayPart, DayResult};
-pub use error_handling::DayError;
+pub use aocday::{AoCDay, DayPart};
 pub use testing::{run_test, test_runner};
 
+pub use aoch_proc::{aoc_inputs, load_days};
 pub mod macros {
 	#[macro_export]
 	macro_rules! daystr {
@@ -19,76 +19,21 @@ pub mod macros {
 			include_str!(concat!("../../input/", $dnum, ".txt"))
 		};
 	}
-}
-pub mod parsing {
-	use std::str::FromStr;
 
-	/// Trims the string, and returns it if the length is greater than zero.
-	pub fn trimmed<'a>(s: &'a str) -> Option<&'a str> {
-		let trimmed = s.trim();
-		if trimmed.len() > 0 {
-			Some(trimmed)
-		} else {
-			None
-		}
-	}
-
-	/// Takes each line with content, and passes them pre-trimmed to the mapping function
-	pub fn try_from_lines_with<T, E, F: FnMut(&str) -> Result<T, E>>(input: &str, map: F) -> Result<Vec<T>, E> {
-		input
-			.lines()
-			.filter_map(trimmed)
-			.map(map)
-			.collect::<Result<Vec<T>, E>>()
-	}
-
-	/// Takes each line with content, and passes them pre-trimmed to the mapping function
-	pub fn from_lines_with<T, F: FnMut(&str) -> T>(input: &str, map: F) -> Vec<T> {
-		input
-			.lines()
-			.filter_map(trimmed)
-			.map(map)
-			.collect::<Vec<T>>()
-	}
-
-
-	/// Returns a vector of the specified type, parsed from strings using [`std::str::parse`].
-	///
-	/// Trims whitespace and skips empty strings
-	pub fn from_iter<'a, T: FromStr, I: Iterator<Item = &'a str>>(
-		iter: I,
-	) -> Result<Vec<T>, T::Err> {
-		iter.filter_map(trimmed)
-			.map(str::parse)
-			.collect::<Result<Vec<T>, T::Err>>()
-	}
-
-	/// Returns a vector of the specified type, parsed from lines using [`std::str::parse`].
-	///
-	/// Trims whitespace and skips empty lines
-	pub fn from_lines<T: FromStr>(input: &str) -> Result<Vec<T>, T::Err> {
-		input
-			.lines()
-			.filter_map(trimmed)
-			.map(str::parse)
-			.collect::<Result<Vec<T>, T::Err>>()
-	}
-
-	pub fn from_grouped_lines<T: FromStr>(input: &str) -> Result<Vec<Vec<T>>, T::Err> {
-		input
-			.split_terminator("\n\n")
-			.filter_map(trimmed)
-			.map(|s| {
-				s.split_terminator("\n")
-					.filter_map(trimmed)
-					.map(str::parse)
-					.collect::<Result<Vec<T>, T::Err>>()
-			})
-			.collect::<Result<Vec<Vec<T>>, T::Err>>()
+	#[macro_export]
+	macro_rules! aoc_input {
+		($daynum: literal) => {
+			aoc_input!("input", $daynum)
+		};
+		($inputdir: literal, $daynum: literal) => {
+			include_str!(concat!("../../", $inputdir, "/", $daynum, ".txt"))
+			// include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $inputdir, "/", $daynum, ".txt"))
+		};
 	}
 }
+pub mod parsing;
 
-pub fn run_day<D: AoCDay>(inputstr: &str) {
+pub fn run_day<D: AoCDay>(day: D, inputstr: &str, part: Option<DayPart>) {
 	use std::io::Read;
 
 	let args: Vec<OsString> = std::env::args_os().collect();
@@ -117,7 +62,17 @@ pub fn run_day<D: AoCDay>(inputstr: &str) {
 		}
 	};
 
-	let mut parsed = D::parse(inp.as_ref()).unwrap();
-	println!("Part 1: {:?}", parsed.part1());
-	println!("Part 2: {:?}", parsed.part2());
+	run_day_with_input(day, part, &inp);
+}
+
+pub fn run_day_with_input<D: AoCDay>(day: D, part: Option<DayPart>, inputstr: &str) {
+	let mut data = day.parse(&inputstr);
+	if matches!(part, None | Some(DayPart::Part1)) {
+		let p1_out = day.part1(&mut data);
+		println!("Day {} Part 1: {}", day.day(), p1_out);
+	}
+	if matches!(part, None | Some(DayPart::Part2)) {
+		let p1_out = day.part2(&mut data);
+		println!("Day {} Part 2: {}", day.day(), p1_out);
+	}
 }
