@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt;
 use std::panic;
 
@@ -9,17 +10,17 @@ use crate::{AoCDay, DayPart};
 const LINES: usize = 10;
 
 // Used to test a day's specific part
-pub fn test_runner<'a, Day, Ans>(day: Day, part: DayPart, cases: &[(&str, Ans)])
+pub fn test_runner<'i, Day, Ans>(day: Day, part: DayPart, cases: &[(&'i str, Ans)])
 where
 	Day: AoCDay,
 	Ans: ToString + fmt::Debug + PartialEq<Day::Answer> + Eq,
 {
-	run_test(|&input| {
-		let mut data: Day::Data = match panic::catch_unwind(move || day.parse(input)) {
+	run_test(|input| {
+		let mut data: Day::Data<'i> = match panic::catch_unwind(move || day.parse(input)) {
 			Ok(ds) => ds,
 			Err(e) => {
 				let input = (input.len() <= 200)
-					.then(|| input).unwrap_or("<too long to display>");
+					.then(|| *input).unwrap_or("<too long to display>");
 				panic!(
 					"error parsing input: `{}` (input = {:?})",
 					format!("{:?}", e).red(),
@@ -50,7 +51,6 @@ where
 		if *expected != generated {
 			// limit input string to 10 lines
 			let short_input: String = {
-				
 				let input = case.to_string();
 				let mut newlines = input.char_indices()
 					.filter(|&(_, c)| c == '\n')
@@ -79,9 +79,9 @@ where
 	}
 }
 
-pub fn run_test<I, E, O, F>(func: F, cases: &[(I, E)])
+pub fn run_test<'i, I, E, O, F>(func: F, cases: &[(I, E)])
 where
-	I: fmt::Debug + Sized,
+	I: fmt::Debug + Sized + 'i,
 	E: fmt::Debug + PartialEq<O> + Eq,
 	O: fmt::Debug,
 	F: for<'a> Fn(&'a I) -> O,
@@ -90,9 +90,9 @@ where
 		let generated = func(case);
 		if *expected != generated {
 			// limit input string to 10 lines
-			let short_input: String = {
+			let short_input: Cow<str> = {
+				let input = DisplayInput::display(&case);
 				
-				let input = format!("{:?}", case);
 				let mut newlines = input.char_indices()
 					.filter(|&(_, c)| c == '\n')
 					.skip(LINES);
@@ -103,7 +103,7 @@ where
 						let rest = newlines.count();
 						let mut sinput = input[..i].to_string();
 						sinput += &format!("\n...<{} more lines>...", rest);
-						sinput
+						Cow::Owned(sinput)
 					}
 				}
 			};
@@ -117,5 +117,19 @@ where
 				i,
 			);
 		};
+	}
+}
+
+trait DisplayInput {
+	fn display<'i>(&'i self) -> Cow<'i, str>;
+}
+impl DisplayInput for &str {
+	fn display<'i>(&'i self) -> Cow<'i, str> {
+		Cow::Borrowed(self)
+	}
+}
+impl<T: fmt::Debug> DisplayInput for T {
+	default fn display<'i>(&'i self) -> Cow<'i, str> {
+		Cow::Owned(format!("{:?}", self))
 	}
 }

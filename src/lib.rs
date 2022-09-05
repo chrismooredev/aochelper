@@ -1,3 +1,6 @@
+#![feature(generic_associated_types)]
+#![feature(specialization)]
+
 use std::borrow::Cow;
 use std::ffi::OsString;
 
@@ -27,7 +30,6 @@ pub mod macros {
 		};
 		($inputdir: literal, $daynum: literal) => {
 			include_str!(concat!("../../", $inputdir, "/", $daynum, ".txt"))
-			// include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $inputdir, "/", $daynum, ".txt"))
 		};
 	}
 }
@@ -59,14 +61,14 @@ pub fn run_day<D: AoCDay>(day: D, inputstr: &str, part: Option<DayPart>) {
 		},
 		Some(s) => {
 			Cow::Owned(std::fs::read_to_string(s).expect("io error reading from file"))
-		}
+		},
 	};
 
 	run_day_with_input(day, part, &inp);
 }
 
 pub fn run_day_with_input<D: AoCDay>(day: D, part: Option<DayPart>, inputstr: &str) {
-	let mut data = day.parse(&inputstr);
+	let mut data = day.parse(inputstr);
 	if matches!(part, None | Some(DayPart::Part1)) {
 		let p1_out = day.part1(&mut data);
 		println!("Day {} Part 1: {}", day.day(), p1_out);
