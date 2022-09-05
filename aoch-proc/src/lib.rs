@@ -85,7 +85,7 @@ pub fn load_days(name: PMTokenStream) -> PMTokenStream {
 			pub mod #smolday;
 		});
 		runners.extend(quote! {
-			(include_str!(concat!(#input_dir, "/", #n,".txt")), &|p, i| ::aoch::run_day_with_input(crate::days::#smolday::#bigday, p, i)),
+			(include_str!(concat!(#input_dir, "/", #n,".txt")), &|p, i, q| ::aoch::run_day_with_input(crate::days::#smolday::#bigday, p, q, i)),
 		});
 	}
 
@@ -93,7 +93,7 @@ pub fn load_days(name: PMTokenStream) -> PMTokenStream {
 		mod days {
 			#day_mods
 		}
-		const RUNNERS: [(&'static str, &dyn Fn(::std::option::Option<::aoch::DayPart>, &str) -> ()); #max] = [
+		const RUNNERS: [(&'static str, &dyn Fn(::std::option::Option<::aoch::DayPart>, bool, &str) -> ()); #max] = [
 			#runners
 		];
 	}.into()

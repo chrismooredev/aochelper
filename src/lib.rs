@@ -64,17 +64,21 @@ pub fn run_day<D: AoCDay>(day: D, inputstr: &str, part: Option<DayPart>) {
 		},
 	};
 
-	run_day_with_input(day, part, &inp);
+	run_day_with_input(day, part, &inp, false);
 }
 
-pub fn run_day_with_input<D: AoCDay>(day: D, part: Option<DayPart>, inputstr: &str) {
+pub fn run_day_with_input<D: AoCDay>(day: D, part: Option<DayPart>, inputstr: &str, quiet: bool) {
 	let mut data = day.parse(inputstr);
 	if matches!(part, None | Some(DayPart::Part1)) {
 		let p1_out = day.part1(&mut data);
-		println!("Day {} Part 1: {}", day.day(), p1_out);
+		if ! quiet {
+			println!("Day {} Part 1: {}", day.day(), p1_out);
+		}
 	}
 	if matches!(part, None | Some(DayPart::Part2)) {
 		let p1_out = day.part2(&mut data);
-		println!("Day {} Part 2: {}", day.day(), p1_out);
+		if ! quiet {
+			println!("Day {} Part 2: {}", day.day(), p1_out);
+		}
 	}
 }
