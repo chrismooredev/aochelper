@@ -90,10 +90,10 @@ pub fn load_days(name: PMTokenStream) -> PMTokenStream {
 	}
 
 	quote! {
-		mod days {
+		pub mod days {
 			#day_mods
 		}
-		const RUNNERS: [(&'static str, &dyn Fn(::std::option::Option<::aoch::DayPart>, bool, &str) -> ()); #max] = [
+		pub const RUNNERS: [(&'static str, &dyn Fn(::std::option::Option<::aoch::DayPart>, bool, &str) -> ()); #max] = [
 			#runners
 		];
 	}.into()
