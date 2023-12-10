@@ -105,6 +105,8 @@ fn main() -> io::Result<()> {
 		if let Err(e) = download_input(act_year, day_num, &session) {
 			eprintln!("error downloading input: {}", e);
 		}
+	} else {
+		eprintln!("no session cookie found. not downloading input.");
 	}
 
 	// create and enter the day's specific folder

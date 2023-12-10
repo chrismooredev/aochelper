@@ -11,25 +11,22 @@ use aoch::{DayPart, run_test, test_runner, daystr};
 pub struct Day{{DayNum}};
 
 impl AoCDay for Day{{DayNum}} {
-	type Data = ();
+	type Data<'i> = Vec<String>;
 	type Answer = usize;
 
 	fn day(&self) -> u8 { {{DayNum}} }
 
-	fn parse(&self, input: &str) -> Self::Data {
-		aoch::parsing::from_lines(input)	
-			.map(|nums| Self::Data { nums })
-			.map_err(|e| e.into())
+	fn parse<'i>(&self, input: &'i str) -> Self::Data<'i> {
+		aoch::parsing::from_lines(input).unwrap()
 	}
-	fn part1(&self, data: &mut Self::Data) -> Self::Answer {
+	fn part1(&self, _data: &mut Self::Data<'_>) -> Self::Answer {
 		todo!("Day {{DayNum}} Part 1")
 	}
-	fn part2(&self, data: &mut Self::Data) -> Self::Answer {
+	fn part2(&self, _data: &mut Self::Data<'_>) -> Self::Answer {
 		todo!("Day {{DayNum}} Part 2")
 	}
 }
 
-/*
 #[cfg(test)]
 const TEST_INPUT: &'static str = "
 1-3 a: abcde
@@ -37,6 +34,7 @@ const TEST_INPUT: &'static str = "
 2-9 c: ccccccccc
 ";
 
+/*
 #[test]
 fn fuel_calc() {
 	let cases = [
@@ -52,7 +50,7 @@ fn part1() {
 		(TEST_INPUT, 0),
 		(daystr!("{{DayNum}}"), 0),
 	];
-	test_runner::<Day{{DayNum}}, _>(DayPart::Part1, &cases);
+	test_runner::<Day{{DayNum}}, _>(Day{{DayNum}}, DayPart::Part1, &cases);
 }
 #[test]
 fn part2() {
@@ -60,5 +58,5 @@ fn part2() {
 		(TEST_INPUT, 0),
 		(daystr!("{{DayNum}}"), 0),
 	];
-	test_runner::<Day{{DayNum}}, _>(DayPart::Part2, &cases);
+	test_runner::<Day{{DayNum}}, _>(Day{{DayNum}}, DayPart::Part2, &cases);
 }
