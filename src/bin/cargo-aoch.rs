@@ -195,7 +195,7 @@ fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<Stri
 			Ok(mut toml_doc) => {
 				let doc = toml_doc.as_table_mut();
 
-				if matches!(doc.entry("package"), Entry::Vacant(_)) {
+				if matches!(doc.entry("package"), Entry::Occupied(_)) {
 					eprintln!("Not adding new package to current Cargo.toml - this directory's Cargo.toml looks like a crate instead of a workspace.");
 					return None;
 				}
