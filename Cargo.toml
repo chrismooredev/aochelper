@@ -1,11 +1,11 @@
 [package]
 name = "aoch"
-version = "1.2.1"
+version = "1.2.2"
 authors = ["Chris Moore"]
 edition = "2018"
 description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
-homepage = "https://github.com/csm123199/aochelper"
-repository = "https://github.com/csm123199/aochelper"
+homepage = "https://github.com/chrismooredev/aochelper"
+repository = "https://github.com/chrismooredev/aochelper"
 readme = "README.md"
 license = "SimPL-2.0"
 keywords = ["aoc", "advent-of-code", "programming-puzzles"]
@@ -13,11 +13,19 @@ categories = ["development-tools", "development-tools::cargo-plugins"]
 
 
 [dependencies]
-colored = "2.0.0"
-ptree = "0.4.0"
 atty = "0.2.13"
-thiserror = "1.0.32"
+chrono = "0.4.31"
+clap = { version = "4.4.11", features = ["derive"] }
+colored = "2.1.0"
+git2 = "0.18.1"
+ptree = "0.4.0"
+reqwest = { version = "0.11.22", features = ["blocking", "cookies"] }
+thiserror = "1.0.50"
+toml_edit = "0.21.0"
+
 aoch-proc = { path = "./aoch-proc" }
+cargo-edit = { git = "https://github.com/chrismooredev/cargo-edit" }
+# cargo-edit = "0.12.2"
 
 [workspace]
 members = [".", "aoch-proc"]

@@ -1,3 +1,4 @@
+use cargo_edit::{Dependency, RegistryReq};
 // use cargo_edit::{Dependency, RegistryReq};
 use chrono::Datelike;
 use clap::Parser;
@@ -6,60 +7,51 @@ use std::ffi::OsString;
 use std::process;
 use std::sync::Arc;
 use std::{io, path::Path};
-use toml_edit::Array;
+use toml_edit::{Array, Entry};
 
 const DAY_TEMPLATE_LIB: &'static str = include_str!("../../templates/lib.rs");
 const DAY_TEMPLATE_BIN: &'static str = include_str!("../../templates/main.rs");
 const GITIGNORE: &'static str = include_str!("../../templates/gitignore");
 
-#[derive(Parser)]
-#[clap(
-	version = clap::crate_version!(),
-	author = "Chris M.",
-	about = "Provides a Rust framework for organizing Advent of Code (AoC) challenges"
-)]
+/// Provides a Rust framework for organizing Advent of Code (AoC challenges)
+#[derive(Debug, clap::Parser)]
+#[command(author, version, about, long_about=None)]
 struct Opts {
-	#[clap(
-		short = 'o',
-		long = "omit-deps",
-		about = "Omits common dependencies from Cargo.toml"
-	)]
+	/// Omits common dependencies from Cargo.toml
+	#[arg(short, long)]
 	omit_deps: bool,
 
-	#[clap(
-		short = 'i',
-		long = "install-dep",
-		about = "Inserts the dependency into Cargo.toml"
-	)]
+	/// Inserts the dependency into Cargo.toml
+	#[arg(short, long)]
 	install_dep: Vec<String>,
 
 	#[clap(subcommand)]
 	subcmd: SubCmd,
 }
 
-#[derive(Parser)]
+#[derive(Debug, clap::Parser)]
 enum SubCmd {
 	/// cargo aoch new <day num> <day name>
 	New(CmdNew),
 }
 
-#[derive(Parser)]
+#[derive(clap::Parser)]
 struct CmdInit {
 	day_name: String,
 }
 
-#[derive(Parser)]
+#[derive(Debug, clap::Parser)]
 struct CmdNew {
-	#[clap(about = "The day's number. Should be within the range of [1, 25]")]
+	/// The day's number. Should be within the range of [1, 25]
 	day_num: Option<u8>,
-	#[clap(about = "The textual name/theme of the day")]
+	/// The textual name/theme of the day
 	day_name: Option<String>,
 }
 
 /// Returns a Dependency representing this crate
-// fn this_crate() -> Dependency {
-// 	Dependency::new("aoch").set_git("https://github.com/csm123199/aochelper", None)
-// }
+fn this_crate() -> Dependency {
+	Dependency::new("aoch").set_git("https://github.com/chrismooredev/aochelper", None)
+}
 
 fn download_input(year: i64, day: u8, session: &str) -> Result<(), Box<dyn std::error::Error>> {
 	if let Err(e) = std::fs::create_dir("./input") {
@@ -180,13 +172,11 @@ fn main() -> io::Result<()> {
 
 	// replace stuff on our template and write it out
 	let day_rs_bin = DAY_TEMPLATE_BIN
-		.clone()
 		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
 		.replace("{{DayName}}", &day_name);
 	std::fs::write("src/main.rs", day_rs_bin)?;
 
 	let day_rs_lib = DAY_TEMPLATE_LIB
-		.clone()
 		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
 		.replace("{{DayName}}", &day_name);
 	std::fs::write("src/lib.rs", day_rs_lib)?;
@@ -205,7 +195,7 @@ fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<Stri
 			Ok(mut toml_doc) => {
 				let doc = toml_doc.as_table_mut();
 
-				if !doc.entry("package").is_none() {
+				if matches!(doc.entry("package"), Entry::Vacant(_)) {
 					eprintln!("Not adding new package to current Cargo.toml - this directory's Cargo.toml looks like a crate instead of a workspace.");
 					return None;
 				}
@@ -216,9 +206,7 @@ fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<Stri
 						.entry("members")
 						.or_insert(Item::Value(Value::Array(Array::default())));
 					if let Item::Value(Value::Array(members)) = members {
-						if let Err(_) = members.push(format!("day{:0>2}", day_num)) {
-							eprintln!("[error] workspace::members array does not contain strings");
-						}
+						members.push(format!("day{:0>2}", day_num));
 					} else {
 						eprintln!("[error] workspace::members item in workspace toml is not an array");
 					}
@@ -238,7 +226,7 @@ fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<Stri
 							// expected year, assert against year in toml
 							// expected year, populate year in toml
 							let yr = aoch.entry("year");
-							yr.or_insert(Item::Value(year.unwrap_or_else(|| chrono::Utc::now().year() as i64).into()));
+							let yr = yr.or_insert(Item::Value(year.unwrap_or_else(|| chrono::Utc::now().year() as i64).into()));
 
 							// yr could include actual, expected, or saved
 							// year is just expected
@@ -260,7 +248,7 @@ fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<Stri
 					eprintln!("[error] workspace item in workspace toml is not a table");
 				}
 
-				if let Err(_) = std::fs::write("Cargo.toml", toml_doc.to_string_in_original_order())
+				if let Err(_) = std::fs::write("Cargo.toml", toml_doc.to_string())
 				{
 					eprintln!("Error writing workspace Cargo.toml");
 				}
