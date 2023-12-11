@@ -2,8 +2,7 @@
 use std::str::FromStr;
 use std::fmt::Debug;
 use itertools::Itertools;
-use aoch::{AoCDay, DayResult};
-use aoch::DayError;
+use aoch::AoCDay;
 #[cfg(test)] #[allow(unused_imports)]
 use aoch::{DayPart, run_test, test_runner, daystr};
 

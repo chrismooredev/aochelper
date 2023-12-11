@@ -1,6 +1,6 @@
 [package]
 name = "aoch"
-version = "1.2.4"
+version = "1.2.5"
 authors = ["Chris Moore"]
 edition = "2018"
 description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
