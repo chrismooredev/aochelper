@@ -1,4 +1,5 @@
 /debug
 /target
+/input
 **/*.rs.bk
 *.pdb

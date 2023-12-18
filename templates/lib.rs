@@ -2,11 +2,12 @@
 use std::str::FromStr;
 use std::fmt::Debug;
 use itertools::Itertools;
+use test_log::test;
 use aoch::AoCDay;
 #[cfg(test)] #[allow(unused_imports)]
 use aoch::{DayPart, run_test, test_runner, daystr};
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 pub struct Day{{DayNum}};
 
 impl AoCDay for Day{{DayNum}} {

@@ -37,15 +37,12 @@ enum SubCmd {
 
 #[derive(clap::Parser)]
 struct CmdInit {
-	day_name: String,
 }
 
 #[derive(Debug, clap::Parser)]
 struct CmdNew {
 	/// The day's number. Should be within the range of [1, 25]
 	day_num: Option<u8>,
-	/// The textual name/theme of the day
-	day_name: Option<String>,
 }
 
 /// Returns a Dependency representing this crate
@@ -92,9 +89,8 @@ fn main() -> io::Result<()> {
 	let opts: Opts = Opts::parse_from(args);
 
 	// can be switched to match if more subcommands are added
-	let SubCmd::New(CmdNew { day_num, day_name }) = opts.subcmd;
+	let SubCmd::New(CmdNew { day_num }) = opts.subcmd;
 	let day_num = day_num.unwrap_or(chrono::Utc::now().day() as u8);
-	let day_name = day_name.unwrap_or_else(|| String::new());
 
 	let mut year: Option<i64> = None;
 	let session_cookie = add_day_to_workspace_toml(&mut year, day_num);
@@ -138,6 +134,8 @@ fn main() -> io::Result<()> {
 		// TODO: look for custom Cargo.toml workspace option for common deps
 		vec.push(Dependency::new("itertools"));
 		vec.push(Dependency::new("thiserror"));
+		vec.push(Dependency::new("log"));
+		vec.push(Dependency::new("test-log"));
 	}
 	for dep in &opts.install_dep {
 		vec.push(Dependency::new(&dep));
@@ -174,13 +172,11 @@ fn main() -> io::Result<()> {
 
 	// replace stuff on our template and write it out
 	let day_rs_bin = DAY_TEMPLATE_BIN
-		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
-		.replace("{{DayName}}", &day_name);
+		.replace("{{DayNum}}", &format!("{:0>2}", day_num));
 	std::fs::write("src/main.rs", day_rs_bin)?;
 
 	let day_rs_lib = DAY_TEMPLATE_LIB
-		.replace("{{DayNum}}", &format!("{:0>2}", day_num))
-		.replace("{{DayName}}", &day_name);
+		.replace("{{DayNum}}", &format!("{:0>2}", day_num));
 	std::fs::write("src/lib.rs", day_rs_lib)?;
 
 	Ok(())
@@ -207,8 +203,19 @@ fn add_day_to_workspace_toml(year: &mut Option<i64>, day_num: u8) -> Option<Stri
 					let members = wkspc
 						.entry("members")
 						.or_insert(Item::Value(Value::Array(Array::default())));
+
 					if let Item::Value(Value::Array(members)) = members {
-						members.push(format!("day{:0>2}", day_num));
+						let daystr = format!("day{:0>2}", day_num);
+						let included = members.iter()
+							.any(|v| {
+								let s = v.as_str()
+									.expect("non-string item found in members array in workspace Cargo.toml");
+								s == daystr
+							});
+
+						if ! included {
+							members.push(daystr);
+						}
 					} else {
 						eprintln!("[error] workspace::members item in workspace toml is not an array");
 					}
