@@ -9,7 +9,7 @@ cargo install --git https://github.com/chrismooredev/aochelper
 ```
 Then in a folder containing your AoC days, you can run the following to init the project:
 ```
-cargo-aoch new <day_num> <day_name>
+cargo-aoch new <day_num>
 ```
 If this is the first day, it will also create a workspace `Cargo.toml` for you. (This is so you can keep an editor like VSCode open to that folder, and have rust-analyzer work properly.)
 
@@ -17,7 +17,6 @@ If this is the first day, it will also create a workspace `Cargo.toml` for you. 
 Each year has it's own crate. Each day is a top-level separate module with the name `dayXX`. The modules can either be a regular rust file `dayXX.rs` or a module folder with `dayXX/mod.rs`
 
 There exist `lib.rs` and `main.rs` files that act as runners for each day. Each module is made public so other crates can run the code. The binary calls out to this library to run each day, either specified via command line or busybox-style, where the exe name specifies the day.
-
 
 * cargo aoch init [year=current]
   * [package.metadata.aoch]

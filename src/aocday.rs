@@ -16,12 +16,12 @@ pub trait AoCDay: fmt::Debug + Sized + UnwindSafe + Clone + Copy {
 	fn part1(&self, data: &mut Self::Data<'_>) -> Self::Answer;
 
 	/// Part 2 implementation.
-	/// 
+	///
 	/// If the result of part1 is needed for part2, then it should be recomputed, or stored in the Data struct.
 	fn part2(&self, data: &mut Self::Data<'_>) -> Self::Answer;
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DayPart {
 	Part1,
 	Part2,
