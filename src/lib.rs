@@ -1,4 +1,4 @@
-#![feature(specialization)]
+#![feature(min_specialization)]
 
 use std::borrow::Cow;
 use std::ffi::OsString;
