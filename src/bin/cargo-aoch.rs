@@ -172,7 +172,7 @@ fn main() -> io::Result<()> {
 
 	// replace stuff on our template and write it out
 	let day_rs_bin = DAY_TEMPLATE_BIN
-		.replace("{{DayNum}}", &format!("{:0>2}", day_num));
+		.replace("{{DayNum}}", &format!("{}", day_num));
 	std::fs::write("src/main.rs", day_rs_bin)?;
 
 	let day_rs_lib = DAY_TEMPLATE_LIB
