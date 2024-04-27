@@ -3,6 +3,7 @@ use std::fmt;
 use std::panic;
 
 use colored::Colorize;
+#[cfg(feature = "alloclog")] use tracking_allocator::{AllocationGroupToken, AllocationRegistry};
 
 use crate::{AoCDay, DayPart};
 
@@ -15,6 +16,15 @@ where
 	Day: AoCDay,
 	Ans: ToString + fmt::Debug + PartialEq<Day::Answer> + Eq,
 {
+	// will drop
+
+	#[cfg(feature = "alloclog")] AllocationRegistry::set_global_tracker(crate::alloclog::MemoryStatistics::default()).unwrap();
+	#[cfg(feature = "alloclog")] AllocationRegistry::enable_tracking();
+	#[cfg(feature = "alloclog")] let mut alloctok = AllocationGroupToken::register().expect("unable to register memory allocator tracking");
+
+	// #[cfg(feature = "alloclog")] // let alloctok = AllocationGroupId::ROOT;
+	#[cfg(feature = "alloclog")] let guard = alloctok.enter();
+
 	run_test(|input| {
 		let mut data: Day::Data<'i> = match panic::catch_unwind(move || day.parse(input)) {
 			Ok(ds) => ds,
@@ -22,7 +32,7 @@ where
 				let input = (input.len() <= 200)
 					.then(|| *input).unwrap_or("<too long to display>");
 				panic!(
-					"error parsing input: `{}` (input = {:?})",
+					"panic while parsing input: `{}` (input = {:?})",
 					format!("{:?}", e).red(),
 					input.bold(),
 				)
@@ -36,6 +46,9 @@ where
 
 		result
 	}, cases);
+
+	#[cfg(feature = "alloclog")]
+	guard.exit();
 }
 
 // Used to test a specific function in a day
@@ -55,7 +68,7 @@ where
 				let mut newlines = input.char_indices()
 					.filter(|&(_, c)| c == '\n')
 					.skip(LINES);
-		
+
 				match newlines.next() {
 					None => input,
 					Some((i, _)) => {
@@ -92,11 +105,11 @@ where
 			// limit input string to 10 lines
 			let short_input: Cow<str> = {
 				let input = DisplayInput::display(&case);
-				
+
 				let mut newlines = input.char_indices()
 					.filter(|&(_, c)| c == '\n')
 					.skip(LINES);
-		
+
 				match newlines.next() {
 					None => input,
 					Some((i, _)) => {

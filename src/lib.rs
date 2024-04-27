@@ -3,6 +3,8 @@
 use std::borrow::Cow;
 use std::ffi::OsString;
 
+#[cfg(feature = "alloclog")]
+pub mod alloclog;
 pub mod tree_node; // independent helper data structure
 
 pub mod aocday;

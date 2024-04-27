@@ -1,6 +1,6 @@
 [package]
 name = "aoch"
-version = "1.3.2"
+version = "1.4.0"
 authors = ["Chris Moore"]
 edition = "2018"
 description = "A helper crate + commands to assist with the annual Advent of Code (AoC) competition"
@@ -30,8 +30,14 @@ toml_edit = { version = "0.21.0", optional = true }
 cargo-edit = { git = "https://github.com/chrismooredev/cargo-edit", optional = true }
 # cargo-edit = "0.12.2"
 
+# memory tracking
+tracking-allocator = { version = "0.4.0", optional = true }
+backtrace = { version = "0.3.69", optional = true }
+
 [features]
+# all = ["cli", "alloclog"]
 default = ["cli"]
+alloclog = ["dep:tracking-allocator", "dep:backtrace"]
 cli = ["dep:cargo-edit", "dep:chrono", "dep:git2", "dep:reqwest", "dep:toml_edit"]
 
 [workspace]
